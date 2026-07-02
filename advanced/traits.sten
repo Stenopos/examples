@@ -1,0 +1,116 @@
+// Example: Traits
+// Status: designed
+// Demonstrates: trait definition, impl blocks, default methods, trait bounds
+
+import std.io.println
+
+// Basic trait
+trait Shape {
+    func area() -> float64
+    func perimeter() -> float64
+
+    // Default implementation
+    func describe() -> str {
+        return "Shape with area {this.area()} and perimeter {this.perimeter()}"
+    }
+}
+
+struct Circle {
+    float64 radius
+}
+
+struct Rectangle {
+    float64 width
+    float64 height
+}
+
+impl Shape for Circle {
+    func area() -> float64 {
+        return 3.14159 * this.radius * this.radius
+    }
+
+    func perimeter() -> float64 {
+        return 2.0 * 3.14159 * this.radius
+    }
+}
+
+impl Shape for Rectangle {
+    func area() -> float64 {
+        return this.width * this.height
+    }
+
+    func perimeter() -> float64 {
+        return 2.0 * (this.width + this.height)
+    }
+
+    // Override default
+    func describe() -> str {
+        return "Rectangle {this.width}x{this.height}"
+    }
+}
+
+// Multiple traits
+trait Serializable {
+    func serialize() -> str
+}
+
+trait Deserializable {
+    static func deserialize(str data) -> Self
+}
+
+impl Serializable for Circle {
+    func serialize() -> str {
+        return "circle:{this.radius}"
+    }
+}
+
+// Trait as parameter type
+func print_area(Shape s) -> void {
+    println("Area: {s.area()}")
+}
+
+// Trait bound in generics
+func largest_area[T: Shape](T[] shapes) -> float64 {
+    float64 max = 0.0
+    for (shape in shapes) {
+        float64 a = shape.area()
+        if (a > max) {
+            max = a
+        }
+    }
+    return max
+}
+
+// Trait inheritance
+trait Drawable : Shape {
+    func draw() -> void
+}
+
+struct Canvas {
+    Drawable[] shapes
+
+    func render() -> void {
+        for (shape in this.shapes) {
+            shape.draw()
+        }
+    }
+}
+
+func main() -> int32 {
+    Circle c = Circle { radius: 5.0 }
+    Rectangle r = Rectangle { width: 4.0, height: 6.0 }
+
+    // Default method
+    println(c.describe())
+    // Overridden method
+    println(r.describe())
+
+    // Trait as parameter
+    print_area(c)
+    print_area(r)
+
+    // Serialization
+    println(c.serialize())
+
+    return 0
+}

@@ -1,0 +1,20 @@
+// Factorial — recursive and const versions
+
+const func factorial(int32 n) -> int32 {
+    if (n <= 1) {
+        return 1
+    }
+    return n * factorial(n - 1)
+}
+
+func main() -> int32 {
+    for (i in 1..10) {
+        printf("{i}! = {factorial(i)}\n")
+    }
+
+    // Evaluated at compile time because all args are const
+    const int32 F10 = factorial(10)
+    printf("10! at compile time = {F10}\n")
+
+    return 0
+}

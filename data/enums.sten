@@ -1,0 +1,49 @@
+// Enums — simple variants, explicit discriminant values, and match
+
+// Basic enum — simple variants with auto-assigned discriminants
+enum Color : int32 {
+    Red = 0
+    Green = 1
+    Blue = 2
+}
+
+// Enum with explicit discriminant values
+enum HttpStatus : int32 {
+    Ok = 200
+    NotFound = 404
+    ServerError = 500
+}
+
+func main() -> int32 {
+    // Match on a simple enum
+    Color my_color = Color::Red
+    int32 color_result = 0
+    match (my_color) {
+        case Color::Red {
+            color_result = 1
+        }
+        case Color::Green {
+            color_result = 2
+        }
+        case Color::Blue {
+            color_result = 3
+        }
+    }
+
+    // Match on an enum with explicit values
+    HttpStatus status = HttpStatus::NotFound
+    int32 status_result = 0
+    match (status) {
+        case HttpStatus::Ok {
+            status_result = 200
+        }
+        case HttpStatus::NotFound {
+            status_result = 404
+        }
+        case HttpStatus::ServerError {
+            status_result = 500
+        }
+    }
+
+    return color_result
+}

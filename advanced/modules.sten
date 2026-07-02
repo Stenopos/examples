@@ -1,0 +1,98 @@
+// Example: Modules and Imports
+// Status: designed
+// Demonstrates: import syntax, pub visibility, module organization, re-exports
+
+// --- Import styles ---
+
+// Import a single item
+import std.io.println
+
+// Import multiple items from the same module
+import std.collections.{HashMap, HashSet, Vec}
+
+// Import an entire module (access via module.item)
+import std.math
+
+// Import with alias
+import std.io.File as IoFile
+
+// Import from a relative path within the project
+import project.utils.helpers
+import project.models.{User, Session}
+
+// --- Visibility ---
+
+// Private by default — only visible within this module
+struct InternalState {
+    int32 value
+}
+
+// Public — visible to importers
+pub struct Config {
+    str name
+    int32 max_retries
+    bool verbose
+}
+
+// Protected — visible to submodules and subclasses
+class BaseHandler {
+    protected str prefix
+
+    pub func handle(str input) -> str {
+        return format_output(input)
+    }
+
+    // Private helper
+    func format_output(str input) -> str {
+        return "{this.prefix}: {input}"
+    }
+}
+
+// --- Module-level functions ---
+
+// Public function — part of the module's API
+pub func create_config(str name) -> Config {
+    return Config {
+        name: name,
+        max_retries: 3,
+        verbose: false
+    }
+}
+
+// Private function — implementation detail
+func validate_name(str name) -> bool {
+    return name.len() > 0 && name.len() < 256
+}
+
+// --- Re-exports ---
+// A module can re-export items from other modules
+// In a mod.sten file:
+//   pub import internal.Config
+//   pub import internal.create_config
+
+// --- Constants ---
+pub const int32 MAX_CONNECTIONS = 1024
+pub const str VERSION = "1.0.0"
+
+func main() -> int32 {
+    // Using imported items
+    Config cfg = create_config("myapp")
+    println("Config: {cfg.name}")
+
+    // Using module-qualified access
+    float64 pi = math.pi
+    float64 root = math.sqrt(16.0)
+    println("sqrt(16) = {root}")
+
+    // Using aliased import
+    IoFile f = IoFile.open("data.txt")
+
+    // Using collections
+    HashMap[str, int32] counts = HashMap[str, int32]{}
+    counts.set("hello", 1)
+    counts.set("world", 2)
+
+    println("Version: {VERSION}")
+
+    return 0
+}

@@ -1,0 +1,52 @@
+// Example: Constant-Time Types (secret[T])
+// Status: designed
+// Demonstrates: secret[T] prevents branching or indexing on secret data, stopping timing attacks
+
+import std.io.println
+import std.crypto.{secret, ct_eq}
+
+// secret[T] is a type wrapper that the compiler tracks.
+// Operations on secret[T] values are restricted to constant-time primitives.
+// You cannot branch on them (if/match) or use them as array indices.
+
+func verify_password(secret[str] stored_hash, str candidate) -> bool {
+    secret[str] candidate_hash = hash(candidate)
+
+    // ct_eq does a constant-time comparison — no early exit on mismatch
+    // A regular == would leak the length of the common prefix via timing
+    return ct_eq(stored_hash, candidate_hash)
+}
+
+func hash(str s) -> secret[str] {
+    // Placeholder — real code calls a proper hash function
+    return secret("hashed:{s}")
+}
+
+// Demonstrating what the compiler REJECTS:
+
+// func bad_check(secret[bool] flag) -> void {
+//     if (flag) {        // ERROR: cannot branch on secret[bool]
+//         println("secret is true")
+//     }
+// }
+
+// func bad_index(secret[int32] idx, int32[] arr) -> int32 {
+//     return arr[idx]    // ERROR: cannot use secret value as array index
+// }
+
+// You must explicitly declassify to use a secret value in ordinary code.
+// Declassification is an audit point — easy to grep for in code review.
+func declassify_example(secret[int32] val) -> void {
+    int32 public_val = val.declassify()
+    println("Declassified: {public_val}")
+}
+
+func main() -> void {
+    secret[str] stored = hash("correct_horse_battery_staple")
+
+    bool ok = verify_password(stored, "correct_horse_battery_staple")
+    println("Password match: {ok}")
+
+    bool bad = verify_password(stored, "wrong")
+    println("Wrong password: {bad}")
+}

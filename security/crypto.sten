@@ -1,0 +1,50 @@
+// Example: Crypto Safety (@sensitive)
+// Status: designed
+// Demonstrates: @sensitive memory wiping, anti-optimization, zeroing keys after use
+
+import std.io.println
+import std.crypto.{secret, secure_zero}
+import std.mem.{alloc, free}
+
+// @sensitive on a variable or struct field tells the compiler:
+//   1. Zero the memory when it goes out of scope
+//   2. Do not let the optimizer remove that zero (use a memory barrier)
+//   3. Do not let the value be swapped to disk or shared with child processes
+//      (maps to mlock/madvise MADV_DONTDUMP on Linux)
+
+struct CryptoKey {
+    @sensitive uint8[] key_bytes   // wiped when CryptoKey is dropped
+    int32 length
+}
+
+func load_key(str path) -> CryptoKey {
+    // In real code: read from a hardware token or key file
+    @sensitive uint8[] raw = [0xDE, 0xAD, 0xBE, 0xEF]
+    return CryptoKey { key_bytes: raw, length: 4 }
+}   // raw is zeroed here automatically
+
+func encrypt(CryptoKey key, uint8[] plaintext) -> uint8[] {
+    // Use key.key_bytes for the cipher — placeholder XOR
+    uint8[] out = plaintext
+    return out
+}   // key goes out of scope → key.key_bytes is zeroed
+
+func demo_explicit_zero() -> void {
+    // You can also zero early — useful before passing control to untrusted code
+    @sensitive uint8[] password_buf = [0x70, 0x61, 0x73, 0x73]
+    println("Password loaded")
+
+    // Work with password_buf ...
+
+    // Explicit early wipe
+    secure_zero(password_buf)
+    println("Password wiped from memory")
+}   // secure_zero already ran, but @sensitive would also fire here — idempotent
+
+func main() -> void {
+    CryptoKey key = load_key("/etc/app.key")
+    uint8[] ciphertext = encrypt(key, [0x01, 0x02, 0x03])
+    println("Encryption complete, key material wiped")
+
+    demo_explicit_zero()
+}

@@ -1,0 +1,13 @@
+// Loops — for loops and while loops
+
+func main() -> void {
+    for (i in 0..5) {
+        println("iteration")
+    }
+
+    int32 counter = 3
+    while (counter > 0) {
+        println("counting down")
+        counter = counter - 1
+    }
+}

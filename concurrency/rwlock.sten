@@ -1,0 +1,57 @@
+// Example: RwLock (Reader-Writer Lock)
+// Status: designed
+// Demonstrates: rwlock[T] allowing many readers or one writer at a time
+
+import std.concurrency.{spawn, Flight, rwlock}
+import std.io.println
+
+struct Config {
+    str host
+    int32 port
+    bool debug
+}
+
+// Many Flights can read at once; only one can write
+rwlock[Config] config = rwlock(Config {
+    host: "localhost",
+    port: 8080,
+    debug: false
+})
+
+func reader_flight(int32 id) -> void {
+    // read() acquires a shared read lock — multiple readers allowed simultaneously
+    with (Config c = config.read()) {
+        println("Reader {id}: host={c.host} port={c.port}")
+    }
+}
+
+func writer_flight() -> void {
+    // write() acquires an exclusive write lock — blocks all readers
+    with (Config c = config.write()) {
+        c.port = 9090
+        c.debug = true
+        println("Writer updated config: port={c.port} debug={c.debug}")
+    }
+}
+
+func main() -> void {
+    println("--- RwLock demo ---")
+
+    // Spawn several readers — they can all run at the same time
+    Flight[] readers = []
+    int32 i = 0
+    for (i in 0..3) {
+        readers.push(spawn reader_flight(i))
+    }
+
+    // Spawn one writer — waits for all readers to finish
+    Flight w = spawn writer_flight()
+
+    for (r in readers) { r.join() }
+    w.join()
+
+    // Read back the updated config
+    with (Config c = config.read()) {
+        println("Final port: {c.port}")
+    }
+}

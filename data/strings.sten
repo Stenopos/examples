@@ -1,0 +1,51 @@
+// Strings — string methods: len, contains, starts_with, ends_with, trim, to_upper, to_lower, replace
+
+func main() -> void {
+    // len
+    str s1 = "Hello, Stenopos!"
+    int64 length = s1.len()
+
+    // is_empty
+    str s2 = ""
+    if (s2.is_empty()) {
+        println("Empty string detected")
+    }
+
+    // contains
+    str s3 = "Hello, Stenopos!"
+    if (s3.contains("Stenopos")) {
+        println("Contains Stenopos: true")
+    }
+
+    // starts_with
+    str s4 = "Hello, Stenopos!"
+    if (s4.starts_with("Hello")) {
+        println("Starts with Hello: true")
+    }
+
+    // ends_with
+    str s5 = "Hello, Stenopos!"
+    if (s5.ends_with("!")) {
+        println("Ends with !: true")
+    }
+
+    // trim
+    str s6 = "  Hello  "
+    str trimmed = s6.trim()
+    println(trimmed)
+
+    // to_upper
+    str s7 = "hello"
+    str upper = s7.to_upper()
+    println(upper)
+
+    // to_lower
+    str s8 = "HELLO"
+    str lower = s8.to_lower()
+    println(lower)
+
+    // replace
+    str s9 = "Hello, World!"
+    str replaced = s9.replace("World", "Stenopos")
+    println(replaced)
+}

@@ -1,0 +1,63 @@
+// Example: String Interpolation
+// Status: designed
+// Demonstrates: {expr} syntax, nested expressions, formatting
+
+import std.io.println
+
+struct Point {
+    float64 x
+    float64 y
+}
+
+func main() -> int32 {
+    // Basic interpolation with {variable}
+    str name = "Stenopos"
+    println("Hello, {name}!")
+
+    // Expressions inside braces
+    int32 a = 10
+    int32 b = 20
+    println("{a} + {b} = {a + b}")
+
+    // Method calls
+    str text = "hello world"
+    println("Upper: {text.to_upper()}")
+    println("Length: {text.len()}")
+
+    // Struct fields
+    Point p = Point { x: 3.0, y: 4.0 }
+    println("Point({p.x}, {p.y})")
+
+    // Nested expressions
+    int32[] numbers = [1, 2, 3, 4, 5]
+    println("First: {numbers[0]}, Last: {numbers[numbers.len() - 1]}")
+    println("Count: {numbers.len()}")
+
+    // Conditionals in interpolation
+    int32 score = 85
+    println("Grade: {if (score >= 90) "A" else if (score >= 80) "B" else "C"}")
+
+    // Multi-line strings with interpolation
+    str report = "
+        Name: {name}
+        Score: {score}
+        Status: {if (score >= 70) "passing" else "failing"}
+    "
+    println(report)
+
+    // Escaped braces — use {{ and }}
+    println("Use {{expr}} for interpolation")
+
+    // Numbers in different formats
+    int32 value = 255
+    println("Decimal: {value}")
+    println("Hex: {value:x}")
+    println("Binary: {value:b}")
+
+    // Float formatting
+    float64 pi = 3.14159265
+    println("Pi: {pi:.2}")      // 3.14
+    println("Pi: {pi:.4}")      // 3.1416
+
+    return 0
+}

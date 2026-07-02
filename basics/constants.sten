@@ -1,0 +1,20 @@
+// Constants — immutable values declared with const
+
+func main() -> void {
+    // Constants of various types
+    const float64 PI = 3.14159
+    const int64 MAX_SIZE = 100
+    const str GREETING = "Hello"
+    const bool ENABLED = true
+    const int32 VERSION = 2
+
+    // Using constants in expressions
+    float64 radius = 5.0
+    float64 circumference = 2.0 * PI * radius
+
+    // Constants alongside mutable variables
+    int64 count = 0
+    count = count + MAX_SIZE
+
+    println("Constants demo complete")
+}

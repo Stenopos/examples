@@ -1,0 +1,51 @@
+// Example: With Block (Resource Management)
+// Status: designed
+// Demonstrates: with block acquiring and auto-releasing resources, even on error
+
+import std.io.{println, File, TempFile}
+import std.db.Connection
+
+// Any type with .open() and .close() works with with blocks.
+// The block calls .close() at the end — even if an exception is thrown.
+
+func read_file(str path) -> void {
+    // File is opened here and closed automatically at the closing brace
+    with (File f = File.open(path, "r")) {
+        str contents = f.read_all()
+        println("Read {contents.len()} bytes")
+    }
+    // f.close() has already been called — no leak possible
+}
+
+func write_file(str path, str data) -> void {
+    with (File f = File.open(path, "w")) {
+        f.write(data)
+    }
+}
+
+func nested_resources() -> void {
+    // Multiple with bindings in one block (opened left to right, closed right to left)
+    with (File src = File.open("input.txt", "r"),
+          File dst = File.open("output.txt", "w")) {
+        str line = src.read_line()
+        dst.write(line.to_upper())
+    }
+}
+
+func db_transaction() -> void {
+    with (Connection conn = Connection.open("sqlite:///app.db")) {
+        conn.execute("INSERT INTO events VALUES ('startup')")
+        // conn.close() called here — commits or rolls back as appropriate
+    }
+}
+
+func main() -> void {
+    try {
+        read_file("/etc/hostname")
+    } catch (Error e) {
+        println("Could not read: {e.message()}")
+    }
+
+    nested_resources()
+    println("with block demo complete")
+}

@@ -1,0 +1,38 @@
+// Example: Spinlock
+// Status: designed
+// Demonstrates: spinlock[T] for ultra-short critical sections, busy-waits instead of sleeping
+
+import std.concurrency.{spawn, Flight, spinlock, atomic}
+import std.io.println
+
+// Spinlock is for data that is held for only a handful of instructions.
+// It busy-waits (spins) instead of yielding to the OS — zero syscall overhead.
+// Wrong choice for long-held locks; right choice for tiny counters.
+spinlock[int64] hot_counter = spinlock(0)
+
+func spin_increment(int32 times) -> void {
+    int32 i = 0
+    for (i in 0..times) {
+        // Lock is held for one add — ideal for spinlock
+        with (int64 val = hot_counter.lock()) {
+            val = val + 1
+        }
+    }
+}
+
+func main() -> void {
+    println("--- Spinlock demo ---")
+
+    Flight[] flights = []
+    int32 i = 0
+    for (i in 0..4) {
+        flights.push(spawn spin_increment(250))
+    }
+    for (f in flights) {
+        f.join()
+    }
+
+    with (int64 val = hot_counter.lock()) {
+        println("Final value: {val} (expected 1000)")
+    }
+}

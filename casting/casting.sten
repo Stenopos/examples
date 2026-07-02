@@ -1,0 +1,35 @@
+// Casting — explicit numeric type conversions using cast[T]()
+
+func main() -> void {
+    // Safe cast: int32 to int64 (widening)
+    int32 x = 42
+    int64 y = cast[int64](x)
+
+    // Safe cast: float64 to int32 (truncating)
+    float64 pi = 3.14
+    int32 rounded = cast[int32](pi)
+
+    // Safe cast: bool to int32
+    bool flag = true
+    int32 as_int = cast[int32](flag)
+
+    // Safe cast: int32 to float64
+    int32 count = 100
+    float64 as_float = cast[float64](count)
+
+    // Cast in expressions
+    int32 a = 10
+    int64 b = cast[int64](a) + 20
+
+    // Multiple casts in chain
+    int32 small = 7
+    int64 medium = cast[int64](small)
+    float64 big = cast[float64](medium)
+
+    // Cast with arithmetic
+    int32 m = 5
+    int32 n = 3
+    float64 ratio = cast[float64](m) / cast[float64](n)
+
+    println("Casting demo complete")
+}

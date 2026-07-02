@@ -1,0 +1,130 @@
+// Example: Nullable Types (Kotlin-style Null Safety)
+// Status: designed
+// Demonstrates: T? syntax, null checks, safe calls, elvis operator, non-null assertion
+
+import std.io.println
+
+// Nullable type — T? means "T or null"
+func find_user(str name) -> str? {
+    if (name == "alice") {
+        return "Alice Anderson"
+    }
+    return null
+}
+
+// Non-nullable parameter — compiler guarantees not null
+func greet(str name) -> void {
+    println("Hello, {name}!")
+}
+
+// Working with nullable values
+func process_user(str username) -> void {
+    str? user = find_user(username)
+
+    // Null check — smart cast to non-null inside block
+    if (user != null) {
+        // 'user' is now str (non-null) inside this block
+        greet(user)
+        println("Name length: {user.len()}")
+    } else {
+        println("User not found: {username}")
+    }
+}
+
+// Nullable fields in structs
+struct Profile {
+    str name
+    str? email
+    int32? age
+}
+
+func display_profile(Profile p) -> void {
+    println("Name: {p.name}")
+
+    // Elvis operator — default value if null
+    str email = p.email ?? "no email"
+    println("Email: {email}")
+
+    // Nullable in string interpolation
+    if (p.age != null) {
+        println("Age: {p.age}")
+    }
+}
+
+// Nullable with collections
+func first_positive(int32[] numbers) -> int32? {
+    for (n in numbers) {
+        if (n > 0) {
+            return n
+        }
+    }
+    return null
+}
+
+// Chaining nullable operations
+struct Company {
+    str name
+    Department? engineering
+}
+
+struct Department {
+    str name
+    Employee? lead
+}
+
+struct Employee {
+    str name
+    str? email
+}
+
+func get_lead_email(Company company) -> str? {
+    // Each ?. short-circuits to null if the receiver is null
+    return company.engineering?.lead?.email
+}
+
+// Non-null assertion (use sparingly — panics if null)
+func must_find(str name) -> str {
+    str? result = find_user(name)
+    return result!!  // Panics with "unexpected null" if result is null
+}
+
+func main() -> int32 {
+    // Basic nullable
+    str? found = find_user("alice")
+    str? missing = find_user("bob")
+    println("Found: {found ?? \"nobody\"}")
+    println("Missing: {missing ?? \"nobody\"}")
+
+    // Smart cast after null check
+    process_user("alice")
+    process_user("bob")
+
+    // Nullable struct fields
+    Profile p = Profile {
+        name: "Alice",
+        email: "alice@example.com",
+        age: null
+    }
+    display_profile(p)
+
+    // Nullable collections
+    int32[] nums = [-3, -1, 0, 4, 2]
+    int32? first = first_positive(nums)
+    println("First positive: {first ?? 0}")
+
+    // Chained nullable access
+    Company co = Company {
+        name: "Acme",
+        engineering: Department {
+            name: "Engineering",
+            lead: Employee {
+                name: "Bob",
+                email: "bob@acme.com"
+            }
+        }
+    }
+    str? email = get_lead_email(co)
+    println("Lead email: {email ?? \"unknown\"}")
+
+    return 0
+}

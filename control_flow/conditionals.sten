@@ -1,0 +1,37 @@
+// Conditionals — if/else if/else chains and nested conditions
+
+func main() -> void {
+    int32 x = 5
+
+    // Simple if-else
+    if (x > 0) {
+        println("x is positive")
+    } else {
+        println("x is not positive")
+    }
+
+    // Else-if chains
+    int64 score = 85
+    if (score >= 90) {
+        println("grade: A")
+    } else if (score >= 80) {
+        println("grade: B")
+    } else if (score >= 70) {
+        println("grade: C")
+    } else {
+        println("grade: F")
+    }
+
+    // Nested if
+    bool logged_in = true
+    int64 role = 1
+    if (logged_in) {
+        if (role == 1) {
+            println("admin access")
+        } else {
+            println("user access")
+        }
+    }
+
+    println("Control flow demo complete")
+}

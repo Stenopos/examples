@@ -1,0 +1,87 @@
+// Example: Linux Kernel Module
+// Status: designed
+// Demonstrates: FFI, unsafe blocks, @repr("C"), raw pointers, inline assembly, @no_return
+
+// Kernel headers — no libc, direct syscall interface
+extern "C" func printk(ptr[void] fmt, ...) -> int32
+extern "C" func register_chrdev(int32 major, ptr[void] name, ptr[void] fops) -> int32
+extern "C" func unregister_chrdev(int32 major, ptr[void] name) -> void
+
+// C-compatible struct layout for kernel interop
+@repr("C")
+struct FileOperations {
+    ptr[void] owner
+    ptr[void] read
+    ptr[void] write
+    ptr[void] open
+    ptr[void] release
+}
+
+const int32 MAJOR_NUM = 240
+const int32 SUCCESS = 0
+
+static bool device_open = false
+static str device_buffer = ""
+
+// Module initialization — called when the module is loaded
+@no_discard
+pub func init_module() -> int32 {
+    unsafe {
+        int32 result = register_chrdev(MAJOR_NUM, b"stenopos_dev\0", &FOPS)
+        if (result < 0) {
+            printk(b"stenopos: failed to register device: %d\n\0", result)
+            return result
+        }
+    }
+
+    unsafe {
+        printk(b"stenopos: module loaded, major=%d\n\0", MAJOR_NUM)
+    }
+    return SUCCESS
+}
+
+// Module cleanup — called when the module is unloaded
+pub func cleanup_module() -> void {
+    unsafe {
+        unregister_chrdev(MAJOR_NUM, b"stenopos_dev\0")
+        printk(b"stenopos: module unloaded\n\0")
+    }
+}
+
+// Device open — called when userspace opens /dev/stenopos_dev
+func device_open_handler(ptr[void] inode, ptr[void] file) -> int32 {
+    if (device_open) {
+        return -16  // -EBUSY
+    }
+    device_open = true
+    return SUCCESS
+}
+
+// Device release — called when userspace closes the file descriptor
+func device_release_handler(ptr[void] inode, ptr[void] file) -> int32 {
+    device_open = false
+    return SUCCESS
+}
+
+// Device read — called when userspace reads from /dev/stenopos_dev
+func device_read_handler(ptr[void] file, ptr[void] buf, uint64 count, ptr[void] offset) -> int64 {
+    // Copy data to userspace buffer
+    unsafe {
+        ptr[void] src = &device_buffer
+        int64 bytes = cast[int64](device_buffer.len())
+        if (bytes > cast[int64](count)) {
+            bytes = cast[int64](count)
+        }
+        // copy_to_user would be called here
+        return bytes
+    }
+}
+
+// Device write — called when userspace writes to /dev/stenopos_dev
+func device_write_handler(ptr[void] file, ptr[void] buf, uint64 count, ptr[void] offset) -> int64 {
+    unsafe {
+        // copy_from_user would be called here
+        printk(b"stenopos: received %lu bytes\n\0", count)
+        return cast[int64](count)
+    }
+}

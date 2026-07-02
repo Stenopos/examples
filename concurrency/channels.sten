@@ -1,0 +1,51 @@
+// Example: Channels
+// Status: designed
+// Demonstrates: chan[T] typed channels, send/recv, buffered channels, producer/consumer
+
+import std.concurrency.{spawn, chan, Flight}
+import std.io.println
+
+// Producer sends values down the channel
+func producer(chan[int32] ch) -> void {
+    int32 i = 0
+    for (i in 0..5) {
+        println("Sending {i}")
+        ch.send(i)
+    }
+    ch.close()
+}
+
+// Consumer reads until channel is closed
+func consumer(chan[int32] ch) -> void {
+    for (val in ch) {
+        println("Received {val}")
+    }
+    println("Channel closed — consumer done")
+}
+
+func unbuffered_example() -> void {
+    println("--- Unbuffered channel ---")
+    // Unbuffered: send blocks until recv is ready
+    chan[int32] ch = chan[int32]()
+    Flight p = spawn producer(ch)
+    Flight c = spawn consumer(ch)
+    p.join()
+    c.join()
+}
+
+func buffered_example() -> void {
+    println("--- Buffered channel (capacity 4) ---")
+    // Buffered: up to 4 sends before blocking
+    chan[int32] ch = chan[int32](4)
+    ch.send(10)
+    ch.send(20)
+    ch.send(30)
+    int32 a = ch.recv()
+    int32 b = ch.recv()
+    println("Got {a} and {b} from buffered channel")
+}
+
+func main() -> void {
+    unbuffered_example()
+    buffered_example()
+}

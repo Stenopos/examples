@@ -1,0 +1,61 @@
+// Example: Effect Annotations
+// Status: designed
+// Demonstrates: @pure, @io, @network, @filesystem, @unsafe annotations encode side-effect policy
+
+import std.io.{println, File}
+import std.net.TcpStream
+
+// @pure: no side effects, no I/O, deterministic — safe to cache, reorder, parallelize
+@pure
+func add(int32 a, int32 b) -> int32 {
+    return a + b
+}
+
+// @pure functions can only call other @pure functions
+@pure
+func square_sum(int32 x, int32 y) -> int32 {
+    return add(x * x, y * y)
+}
+
+// @io: reads or writes to stdin/stdout/stderr or general I/O
+@io
+func log_message(str msg) -> void {
+    println("[LOG] {msg}")
+}
+
+// @filesystem: reads or writes files on disk
+@filesystem
+func read_config(str path) -> str {
+    with (File f = File.open(path, "r")) {
+        return f.read_all()
+    }
+}
+
+// @network: opens sockets, makes HTTP requests, DNS lookups, etc.
+@network
+func ping(str host) -> bool {
+    try {
+        TcpStream conn = TcpStream.connect(host, 80)
+        conn.close()
+        return true
+    } catch (Error _e) {
+        return false
+    }
+}
+
+// A function that does everything must declare all effects
+@io @network @filesystem
+func startup_check() -> void {
+    log_message("Starting up")
+    str cfg = read_config("/etc/app.conf")
+    bool online = ping("example.com")
+    log_message("Online: {online}")
+}
+
+// Effect inference: the compiler can also infer effects automatically
+// and warn when an @pure function secretly calls @io code
+func main() -> void {
+    int32 result = square_sum(3, 4)
+    println("3^2 + 4^2 = {result}")
+    startup_check()
+}

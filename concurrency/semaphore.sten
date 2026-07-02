@@ -1,0 +1,46 @@
+// Example: Semaphore
+// Status: designed
+// Demonstrates: semaphore[N] limiting how many Flights run a critical section at once
+
+import std.concurrency.{spawn, Flight, semaphore}
+import std.io.println
+
+// Only 3 Flights may enter the database pool at once
+semaphore[3] db_pool = semaphore()
+
+func query_database(int32 flight_id) -> void {
+    println("Flight {flight_id}: waiting for DB slot")
+
+    // acquire() blocks until a permit is available
+    db_pool.acquire()
+
+    println("Flight {flight_id}: executing query")
+    // ... do database work here ...
+
+    // release() returns the permit for the next waiter
+    db_pool.release()
+    println("Flight {flight_id}: released DB slot")
+}
+
+func with_block_variant(int32 flight_id) -> void {
+    // with block: acquire on entry, release on exit — even if an error is thrown
+    with (db_pool.permit()) {
+        println("Flight {flight_id}: inside permit block")
+    }
+}
+
+func main() -> void {
+    println("--- Semaphore demo: max 3 concurrent DB connections ---")
+
+    // 8 Flights competing for 3 slots
+    Flight[] flights = []
+    int32 i = 0
+    for (i in 0..8) {
+        flights.push(spawn query_database(i))
+    }
+    for (f in flights) {
+        f.join()
+    }
+
+    println("All queries complete")
+}

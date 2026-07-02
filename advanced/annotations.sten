@@ -1,0 +1,146 @@
+// Example: Annotations
+// Status: designed
+// Demonstrates: all built-in annotations and their usage
+
+import std.io.println
+
+// --- Function annotations ---
+
+// Must use the return value — compiler error if discarded
+@no_discard
+func compute(int32 x) -> int32 {
+    return x * x + 1
+}
+
+// Function never returns (infinite loops, exit, panic)
+@no_return
+func fatal_error(str message) -> void {
+    eprintln("FATAL: {message}")
+    exit(1)
+}
+
+// Hint: inline this function at call sites
+@inline
+func fast_add(int32 a, int32 b) -> int32 {
+    return a + b
+}
+
+// Hint: this function is rarely called (error paths)
+@cold
+func handle_error(str msg) -> void {
+    eprintln(msg)
+}
+
+// Hint: this function is called frequently (hot loop)
+@hot
+func process_item(int32 item) -> int32 {
+    return item * 2
+}
+
+// Mark as deprecated with a message
+@deprecated("Use process_v2() instead")
+func process(int32 x) -> int32 {
+    return x
+}
+
+// --- Struct annotations ---
+
+// No padding between fields — exact memory layout
+@packed
+struct PackedHeader {
+    uint8 version
+    uint8 flags
+    uint16 length
+    uint32 checksum
+}
+
+// Align struct to N-byte boundary
+@aligned(64)
+struct CacheLine {
+    int64[8] data
+}
+
+// C-compatible memory layout
+@repr("C")
+struct CStruct {
+    int32 x
+    int32 y
+    float64 z
+}
+
+// Opaque type — internals hidden from other modules
+@opaque
+struct Handle {
+    uint64 id
+    ptr[uint8] internal_data
+}
+
+// --- Security annotations ---
+
+// Sensitive data — zeroed on drop, excluded from logs
+@sensitive
+struct Password {
+    str value
+}
+
+// Taint tracking
+@tainted
+func read_user_input() -> str {
+    return get_input()
+}
+
+@sanitizer
+func sanitize_html(str input) -> str {
+    // Remove dangerous characters
+    return input.replace("<", "&lt;").replace(">", "&gt;")
+}
+
+@sink
+func execute_query(str query) -> void {
+    // Compiler ensures only sanitized data reaches here
+    db.execute(query)
+}
+
+// --- Test annotation ---
+
+@test
+func test_compute() -> void {
+    assert(compute(3) == 10)
+    assert(compute(0) == 1)
+}
+
+@test
+func test_fast_add() -> void {
+    assert(fast_add(2, 3) == 5)
+}
+
+// --- Linker section ---
+
+@section(".init")
+func early_init() -> void {
+    // Placed in the .init section of the binary
+}
+
+func main() -> int32 {
+    // @no_discard — must use the return value
+    int32 result = compute(5)
+    println("Result: {result}")
+
+    // @inline — transparent to the user
+    int32 sum = fast_add(10, 20)
+    println("Sum: {sum}")
+
+    // @packed struct — exact size
+    PackedHeader header = PackedHeader {
+        version: 1,
+        flags: 0xFF,
+        length: 1024,
+        checksum: 0xDEADBEEF
+    }
+    println("Header version: {header.version}")
+
+    // @sensitive — value is zeroed when Password goes out of scope
+    Password pw = Password { value: "hunter2" }
+
+    return 0
+}

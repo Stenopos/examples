@@ -1,0 +1,19 @@
+// Inline assembly — embedding raw assembly instructions with asm blocks
+
+func nop_sled() -> void {
+    asm {
+        "nop"
+    }
+}
+
+func memory_fence() -> void {
+    asm {
+        "mfence"
+    }
+}
+
+func main() -> void {
+    nop_sled()
+    memory_fence()
+    println("Inline assembly demo complete")
+}

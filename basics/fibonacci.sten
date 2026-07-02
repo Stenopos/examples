@@ -1,0 +1,36 @@
+// Fibonacci — iterative and recursive versions
+
+func fib_recursive(int32 n) -> int32 {
+    if (n <= 1) {
+        return n
+    }
+    return fib_recursive(n - 1) + fib_recursive(n - 2)
+}
+
+func fib_iterative(int32 n) -> int32 {
+    if (n <= 1) {
+        return n
+    }
+    int32 a = 0
+    int32 b = 1
+    for (i in 2..n) {
+        int32 c = a + b
+        a = b
+        b = c
+    }
+    return b
+}
+
+func main() -> int32 {
+    printf("Fibonacci (recursive):\n")
+    for (i in 0..10) {
+        printf("  fib({i}) = {fib_recursive(i)}\n")
+    }
+
+    printf("Fibonacci (iterative):\n")
+    for (i in 0..10) {
+        printf("  fib({i}) = {fib_iterative(i)}\n")
+    }
+
+    return 0
+}

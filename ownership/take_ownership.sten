@@ -1,0 +1,11 @@
+// Take ownership — passing a string to a function that takes ownership
+
+func take_string(str s) -> void {
+    println(s)
+}
+
+func main() -> void {
+    str msg = "Hello"
+    take_string(msg)
+    take_string(msg)
+}

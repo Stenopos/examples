@@ -1,0 +1,12 @@
+// References — primitive types (int32) are copyable, not moved
+
+func process(int32 x) -> int32 {
+    return x + 10
+}
+
+func main() -> void {
+    int32 num = 42
+    int32 a = process(num)
+    int32 b = process(num)
+    println("i32 values can be used multiple times")
+}

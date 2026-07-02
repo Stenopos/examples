@@ -1,0 +1,36 @@
+// Match — pattern matching on values and ranges
+
+func main() -> void {
+    int64 x = 5
+
+    match (x) {
+        case 0 {
+            println("zero")
+        }
+        case 1 {
+            println("one")
+        }
+        case 2..10 {
+            println("small number")
+        }
+        case _ {
+            println("large number")
+        }
+    }
+
+    int64 status = 200
+    match (status) {
+        case 200 {
+            println("OK")
+        }
+        case 404 {
+            println("Not Found")
+        }
+        case 500 {
+            println("Server Error")
+        }
+        case _ {
+            println("Unknown status")
+        }
+    }
+}

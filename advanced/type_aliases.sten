@@ -1,0 +1,63 @@
+// Example: Type Aliases
+// Status: designed
+// Demonstrates: type keyword, readable aliases, generic aliases
+
+import std.io.println
+
+// Simple type aliases for readability
+type UserId = uint64
+type Score = float64
+type Name = str
+
+// Alias for complex types
+type StringMap = HashMap[str, str]
+type Callback = |int32| -> bool
+type Matrix = float64[][]
+
+// Alias with generics
+type Result[T] = enum : int32 {
+    Ok(T) = 0
+    Err(str) = 1
+}
+
+type Optional[T] = T?
+
+// Using aliases in function signatures
+func get_user_name(UserId id) -> Name {
+    return "User_{id}"
+}
+
+func calculate_score(int32[] values) -> Score {
+    int32 sum = 0
+    for (v in values) {
+        sum += v
+    }
+    return cast[float64](sum) / cast[float64](values.len())
+}
+
+// Aliases make complex signatures readable
+type EventHandler = |str, HashMap[str, str]| -> bool
+type Middleware = |Request| -> Response
+
+struct Router {
+    HashMap[str, EventHandler] routes
+
+    func on(str path, EventHandler handler) -> void {
+        this.routes.set(path, handler)
+    }
+}
+
+func main() -> int32 {
+    UserId id = 42
+    Name name = get_user_name(id)
+    println("User: {name}")
+
+    Score avg = calculate_score([85, 92, 78, 95])
+    println("Average: {avg}")
+
+    // Type alias is fully interchangeable with the original type
+    uint64 raw_id = id  // No cast needed — same type
+    println("Raw ID: {raw_id}")
+
+    return 0
+}

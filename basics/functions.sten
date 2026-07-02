@@ -1,0 +1,20 @@
+// Functions — defining and calling functions with multiple signatures
+
+func add(int32 a, int32 b) -> int32 {
+    return a + b
+}
+
+func multiply(int32 a, int32 b) -> int32 {
+    return a * b
+}
+
+func compute(int32 x, int32 y) -> int32 {
+    int32 sum = add(x, y)
+    int32 product = multiply(x, y)
+    return add(sum, product)
+}
+
+func main() -> void {
+    int32 result = compute(3, 4)
+    println("Functions demo complete")
+}

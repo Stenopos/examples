@@ -1,0 +1,103 @@
+// Example: Generics
+// Status: designed
+// Demonstrates: generic functions, generic structs, type constraints, [T] syntax
+
+import std.io.println
+
+// Generic function — square brackets for type parameters
+func max[T](T a, T b) -> T {
+    if (a > b) {
+        return a
+    }
+    return b
+}
+
+// Generic struct
+struct Pair[A, B] {
+    A first
+    B second
+}
+
+func swap[A, B](Pair[A, B] p) -> Pair[B, A] {
+    return Pair[B, A] { first: p.second, second: p.first }
+}
+
+// Generic with trait constraint
+trait Printable {
+    func to_string() -> str
+}
+
+func print_all[T: Printable](T[] items) -> void {
+    for (item in items) {
+        println(item.to_string())
+    }
+}
+
+// Generic container
+struct Stack[T] {
+    T[] items
+
+    func push(T item) -> void {
+        this.items.push(item)
+    }
+
+    func pop() -> T? {
+        if (this.items.len() == 0) {
+            return null
+        }
+        return this.items.remove_last()
+    }
+
+    func peek() -> T? {
+        if (this.items.len() == 0) {
+            return null
+        }
+        return this.items[this.items.len() - 1]
+    }
+
+    func is_empty() -> bool {
+        return this.items.len() == 0
+    }
+}
+
+// Generic function with multiple constraints
+func find_max[T: Comparable + Printable](T[] items) -> T {
+    T best = items[0]
+    for (i in 1..<items.len()) {
+        if (items[i] > best) {
+            best = items[i]
+        }
+    }
+    return best
+}
+
+func main() -> int32 {
+    // Generic function calls
+    int32 m = max[int32](10, 20)
+    println("Max: {m}")
+
+    float64 f = max[float64](3.14, 2.71)
+    println("Max: {f}")
+
+    // Generic struct
+    Pair[str, int32] p = Pair[str, int32] { first: "age", second: 30 }
+    println("{p.first}: {p.second}")
+
+    Pair[int32, str] swapped = swap(p)
+    println("{swapped.first}: {swapped.second}")
+
+    // Generic container
+    Stack[int32] s = Stack[int32] { items: [] }
+    s.push(1)
+    s.push(2)
+    s.push(3)
+
+    while (!s.is_empty()) {
+        int32? val = s.pop()
+        if (val != null) {
+            println("Popped: {val}")
+        }
+    }
+
+    return 0
+}

@@ -1,0 +1,11 @@
+// If statement — basic conditional branching
+
+func main() -> void {
+    int32 x = 5
+
+    if (x > 0) {
+        println("x is positive")
+    } else {
+        println("x is not positive")
+    }
+}

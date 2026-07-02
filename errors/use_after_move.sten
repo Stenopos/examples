@@ -1,0 +1,15 @@
+// This file should fail to compile.
+// Expected error: use of moved value 'msg' — a string cannot be used after it has been moved.
+
+func consume(str s) -> void {
+    println(s)
+}
+
+func main() -> void {
+    str msg = "dangerous"
+    consume(msg)
+    consume(msg)   // error: 'msg' was moved on the previous line
+
+    int32 x = 10
+    x = 20
+}

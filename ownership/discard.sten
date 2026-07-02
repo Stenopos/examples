@@ -1,0 +1,23 @@
+// Discard — explicitly discarding non-void return values
+
+func add(int32 a, int32 b) -> int32 {
+    return a + b
+}
+
+func multiply(int32 a, int32 b) -> int32 {
+    return a * b
+}
+
+func main() -> void {
+    // Return value used in assignment (always allowed)
+    int32 result = add(1, 2)
+
+    // Discard with keyword
+    discard add(3, 4)
+
+    // Discard with underscore syntax
+    _ = multiply(5, 6)
+
+    // Void functions need no discard
+    println("Discard demo complete")
+}

@@ -1,0 +1,135 @@
+// Example: Bare Metal x86_64 — Minimal OS Kernel
+// Status: designed
+// Demonstrates: inline assembly, unsafe, raw pointers, @no_return, @packed, @aligned, FFI
+
+// No standard library — bare metal, freestanding environment
+
+// VGA text mode buffer at 0xB8000
+const uint64 VGA_BUFFER = 0xB8000
+const int32 VGA_WIDTH = 80
+const int32 VGA_HEIGHT = 25
+
+@packed
+struct VgaChar {
+    uint8 character
+    uint8 color
+}
+
+// VGA colors
+enum VgaColor : uint8 {
+    Black = 0
+    Blue = 1
+    Green = 2
+    Cyan = 3
+    Red = 4
+    Magenta = 5
+    Brown = 6
+    LightGrey = 7
+    DarkGrey = 8
+    LightBlue = 9
+    LightGreen = 10
+    LightCyan = 11
+    LightRed = 12
+    Pink = 13
+    Yellow = 14
+    White = 15
+}
+
+static int32 cursor_x = 0
+static int32 cursor_y = 0
+static uint8 current_color = 15  // white on black
+
+// Entry point — called by bootloader
+@no_return
+pub func _start() -> void {
+    clear_screen()
+    set_color(VgaColor.LightGreen, VgaColor.Black)
+    print_str("Stenopos OS v0.1.0")
+    newline()
+    set_color(VgaColor.White, VgaColor.Black)
+    print_str("Memory-safe bare metal, written in Stenopos.")
+    newline()
+    newline()
+    print_str("> ")
+
+    // Halt — wait for interrupts
+    halt_loop()
+}
+
+func clear_screen() -> void {
+    unsafe {
+        ptr[VgaChar] buffer = cast[ptr[VgaChar]](VGA_BUFFER)
+        for (i in 0..<(VGA_WIDTH * VGA_HEIGHT)) {
+            ptr[VgaChar] cell = buffer + i
+            (*cell).character = 0x20  // space
+            (*cell).color = current_color
+        }
+    }
+    cursor_x = 0
+    cursor_y = 0
+}
+
+func put_char(uint8 ch) -> void {
+    if (cursor_y >= VGA_HEIGHT) {
+        scroll_up()
+        cursor_y = VGA_HEIGHT - 1
+    }
+
+    unsafe {
+        ptr[VgaChar] buffer = cast[ptr[VgaChar]](VGA_BUFFER)
+        int32 offset = cursor_y * VGA_WIDTH + cursor_x
+        ptr[VgaChar] cell = buffer + offset
+        (*cell).character = ch
+        (*cell).color = current_color
+    }
+
+    cursor_x += 1
+    if (cursor_x >= VGA_WIDTH) {
+        cursor_x = 0
+        cursor_y += 1
+    }
+}
+
+func print_str(str s) -> void {
+    for (i in 0..<s.len()) {
+        put_char(cast[uint8](s[i]))
+    }
+}
+
+func newline() -> void {
+    cursor_x = 0
+    cursor_y += 1
+}
+
+func set_color(VgaColor fg, VgaColor bg) -> void {
+    current_color = cast[uint8](bg) << 4 | cast[uint8](fg)
+}
+
+func scroll_up() -> void {
+    unsafe {
+        ptr[VgaChar] buffer = cast[ptr[VgaChar]](VGA_BUFFER)
+        // Copy each row up by one
+        for (row in 1..<VGA_HEIGHT) {
+            for (col in 0..<VGA_WIDTH) {
+                int32 dst = (row - 1) * VGA_WIDTH + col
+                int32 src = row * VGA_WIDTH + col
+                *(buffer + dst) = *(buffer + src)
+            }
+        }
+        // Clear the last row
+        for (col in 0..<VGA_WIDTH) {
+            int32 offset = (VGA_HEIGHT - 1) * VGA_WIDTH + col
+            (*(buffer + offset)).character = 0x20
+            (*(buffer + offset)).color = current_color
+        }
+    }
+}
+
+@no_return
+func halt_loop() -> void {
+    repeat {
+        asm {
+            "hlt"
+        }
+    }
+}

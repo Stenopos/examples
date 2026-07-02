@@ -1,0 +1,125 @@
+// Example: Pattern Matching
+// Status: designed
+// Demonstrates: match expressions, enum matching, destructuring, guards, exhaustiveness
+
+import std.io.println
+
+// --- Enum matching ---
+
+enum Shape : int32 {
+    Circle = 0
+    Rectangle = 1
+    Triangle = 2
+}
+
+func shape_name(Shape s) -> str {
+    return match (s) {
+        case Shape.Circle { "circle" }
+        case Shape.Rectangle { "rectangle" }
+        case Shape.Triangle { "triangle" }
+    }
+}
+
+// --- Match with associated data ---
+
+enum Result[T] : int32 {
+    Ok(T) = 0
+    Err(str) = 1
+}
+
+func describe_result(Result[int32] r) -> str {
+    return match (r) {
+        case Result.Ok(value) { "Success: {value}" }
+        case Result.Err(msg) { "Error: {msg}" }
+    }
+}
+
+// --- Match with guards ---
+
+func classify(int32 n) -> str {
+    return match (n) {
+        case 0 { "zero" }
+        case x if (x > 0 && x < 10) { "small positive" }
+        case x if (x >= 10 && x < 100) { "medium positive" }
+        case x if (x >= 100) { "large positive" }
+        case _ { "negative" }
+    }
+}
+
+// --- Destructuring in match ---
+
+struct Point {
+    float64 x
+    float64 y
+}
+
+func quadrant(Point p) -> str {
+    return match (p) {
+        case Point { x: 0.0, y: 0.0 } { "origin" }
+        case Point { x, y } if (x > 0.0 && y > 0.0) { "quadrant I" }
+        case Point { x, y } if (x < 0.0 && y > 0.0) { "quadrant II" }
+        case Point { x, y } if (x < 0.0 && y < 0.0) { "quadrant III" }
+        case Point { x, y } if (x > 0.0 && y < 0.0) { "quadrant IV" }
+        case _ { "on an axis" }
+    }
+}
+
+// --- Match as expression ---
+
+func abs(int32 n) -> int32 {
+    return match (n >= 0) {
+        case true { n }
+        case false { -n }
+    }
+}
+
+// --- Exhaustiveness checking ---
+
+enum Color : int32 {
+    Red = 0
+    Green = 1
+    Blue = 2
+}
+
+// Compiler ensures all cases are handled — no default needed
+func to_hex(Color c) -> str {
+    return match (c) {
+        case Color.Red { "#FF0000" }
+        case Color.Green { "#00FF00" }
+        case Color.Blue { "#0000FF" }
+    }
+}
+
+// --- Multiple values in a case ---
+
+func is_vowel(uint8 ch) -> bool {
+    return match (ch) {
+        case 'a', 'e', 'i', 'o', 'u' { true }
+        case 'A', 'E', 'I', 'O', 'U' { true }
+        case _ { false }
+    }
+}
+
+func main() -> int32 {
+    // Enum matching
+    println(shape_name(Shape.Circle))
+    println(shape_name(Shape.Triangle))
+
+    // Guards
+    println(classify(0))
+    println(classify(5))
+    println(classify(42))
+    println(classify(-7))
+
+    // Destructuring
+    Point p = Point { x: 3.0, y: -2.0 }
+    println("Point is in {quadrant(p)}")
+
+    // Match expression
+    println("abs(-5) = {abs(-5)}")
+
+    // Exhaustive
+    println("Red = {to_hex(Color.Red)}")
+
+    return 0
+}

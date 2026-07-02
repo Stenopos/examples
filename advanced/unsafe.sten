@@ -1,0 +1,61 @@
+// Example: Unsafe Blocks and Raw Pointers
+// Status: implemented
+// Demonstrates: unsafe blocks, ptr[T] type, dereference, pointer arithmetic
+
+import std.io.println
+import std.mem.{alloc, free}
+
+func demo_raw_pointer() -> void {
+    int32 x = 42
+    // Take the address of a stack variable
+    ptr[int32] p = &x
+
+    unsafe {
+        // Dereference is only allowed inside unsafe
+        int32 val = *p
+        println("Dereferenced: {val}")
+
+        // Write through the pointer
+        *p = 100
+    }
+    println("x after write through pointer: {x}")
+}
+
+func demo_heap_pointer() -> void {
+    // alloc returns a raw pointer to heap memory
+    ptr[int32] buf = alloc[int32](4)   // 4 ints
+
+    unsafe {
+        // Write to each slot via pointer arithmetic
+        *buf = 10
+        *(buf + 1) = 20
+        *(buf + 2) = 30
+        *(buf + 3) = 40
+
+        int32 i = 0
+        for (i in 0..4) {
+            int32 v = *(buf + i)
+            println("buf[{i}] = {v}")
+        }
+    }
+
+    free(buf)
+}
+
+func demo_void_pointer() -> void {
+    int64 value = 0xDEADBEEF
+    ptr[void] vp = &value
+
+    unsafe {
+        // Cast void pointer to typed pointer before dereferencing
+        ptr[int64] typed = unsafe_cast[ptr[int64]](vp)
+        int64 read_back = *typed
+        println("Read via void pointer: {read_back}")
+    }
+}
+
+func main() -> void {
+    demo_raw_pointer()
+    demo_heap_pointer()
+    demo_void_pointer()
+}

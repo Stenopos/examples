@@ -1,0 +1,57 @@
+// Example: Try / Catch / Finally
+// Status: designed
+// Demonstrates: try block, multiple catch arms by type, finally always runs
+
+import std.io.{println, File}
+import std.errors.{IoError, ParseError, NetworkError, Error}
+
+func parse_number(str s) -> int32 {
+    // throws ParseError if s is not a valid integer
+    return int32.parse(s)
+}
+
+func read_config(str path) -> str {
+    // throws IoError if the file does not exist
+    File f = File.open(path)
+    return f.read_all()
+}
+
+func demo_multiple_catch() -> void {
+    try {
+        str raw = read_config("/etc/app.conf")
+        int32 port = parse_number(raw)
+        println("Port: {port}")
+    } catch (IoError e) {
+        // Specific handler — file not found, permission denied, etc.
+        println("IO problem: {e.message()}")
+    } catch (ParseError e) {
+        // Config contained a non-integer
+        println("Bad value in config: {e.message()}")
+    } catch (Error e) {
+        // Catch-all for anything else
+        println("Unexpected error: {e.message()}")
+    } finally {
+        // Runs whether an error was thrown or not
+        println("Config load attempt finished")
+    }
+}
+
+func demo_rethrow() -> void {
+    try {
+        parse_number("not-a-number")
+    } catch (ParseError e) {
+        println("Caught, logging, then rethrowing...")
+        throw e
+    }
+}
+
+func main() -> void {
+    demo_multiple_catch()
+
+    // Outer handler catches the rethrown error
+    try {
+        demo_rethrow()
+    } catch (Error e) {
+        println("Outer caught: {e.message()}")
+    }
+}

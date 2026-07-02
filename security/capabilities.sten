@@ -1,0 +1,45 @@
+// Example: Capability Permissions
+// Status: designed
+// Demonstrates: cap[Resource] tokens gate access to sensitive operations at the type level
+
+import std.io.println
+import std.caps.{cap, FileReadCap, FileWriteCap, NetworkCap, EnvCap}
+
+// Functions declare which capabilities they need in their signature.
+// The caller must hold the token — you cannot fake it.
+
+// Only a holder of FileReadCap can call this
+func read_secret(cap[FileReadCap] _perm, str path) -> str {
+    // _perm proves the caller was granted file-read access
+    return "contents of {path}"
+}
+
+// Only a holder of NetworkCap can open sockets
+func fetch_url(cap[NetworkCap] _perm, str url) -> str {
+    return "response from {url}"
+}
+
+// Capabilities can be narrowed and passed down but not forged
+func run_with_caps(cap[FileReadCap] read_cap, cap[NetworkCap] net_cap) -> void {
+    str data = read_secret(read_cap, "/etc/passwd")
+    str resp = fetch_url(net_cap, "https://example.com")
+    println("Got data and response")
+}
+
+// The runtime / OS grants capabilities at program entry.
+// Sandboxed libraries that do not receive them cannot do I/O at all.
+func sandboxed_library(str data) -> str {
+    // No cap parameters — this function is provably I/O-free
+    return data.to_upper()
+}
+
+func main() -> void {
+    // Capabilities are granted at the top level by the runtime
+    cap[FileReadCap]  read_cap = cap.grant[FileReadCap]()
+    cap[NetworkCap]   net_cap  = cap.grant[NetworkCap]()
+
+    run_with_caps(read_cap, net_cap)
+
+    str result = sandboxed_library("hello")
+    println("{result}")
+}

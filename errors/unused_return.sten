@@ -1,0 +1,11 @@
+// This file should fail to compile.
+// Expected error: return value of 'add' is not used — use discard or assign to '_'.
+
+func add(int32 a, int32 b) -> int32 {
+    return a + b
+}
+
+func main() -> void {
+    // Return value is silently dropped — Stenopos requires explicit discard
+    add(1, 2)   // error: non-void return value must be used or discarded
+}

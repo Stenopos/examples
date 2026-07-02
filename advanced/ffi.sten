@@ -1,0 +1,79 @@
+// Example: Foreign Function Interface (FFI)
+// Status: designed
+// Demonstrates: extern "C", calling C libraries, @repr("C"), raw pointers
+
+import std.io.println
+
+// Declare external C functions
+extern "C" func puts(ptr[uint8] s) -> int32
+extern "C" func strlen(ptr[uint8] s) -> uint64
+extern "C" func malloc(uint64 size) -> ptr[uint8]
+extern "C" func free(ptr[uint8] p) -> void
+extern "C" func memcpy(ptr[uint8] dst, ptr[uint8] src, uint64 n) -> ptr[uint8]
+
+// C-compatible struct layout
+@repr("C")
+struct CPoint {
+    float64 x
+    float64 y
+}
+
+// Hypothetical external C library
+extern "C" func distance(ptr[CPoint] a, ptr[CPoint] b) -> float64
+
+// Wrapping C calls in safe Stenopos functions
+func safe_strlen(str s) -> uint64 {
+    unsafe {
+        return strlen(cast[ptr[uint8]](s.data()))
+    }
+}
+
+func alloc_buffer(uint64 size) -> ptr[uint8] {
+    unsafe {
+        ptr[uint8] buf = malloc(size)
+        if (buf == cast[ptr[uint8]](0)) {
+            panic("allocation failed")
+        }
+        return buf
+    }
+}
+
+// Callback function pointer — passed to C code
+@repr("C")
+func compare_ints(ptr[int32] a, ptr[int32] b) -> int32 {
+    unsafe {
+        if (*a < *b) {
+            return -1
+        } else if (*a > *b) {
+            return 1
+        }
+        return 0
+    }
+}
+
+extern "C" func qsort(
+    ptr[uint8] base, uint64 nmemb, uint64 size,
+    ptr[func(ptr[int32], ptr[int32]) -> int32] compar
+) -> void
+
+func main() -> int32 {
+    // Direct C call
+    unsafe {
+        puts(cast[ptr[uint8]]("Hello from C!\0".data()))
+    }
+
+    // Safe wrapper
+    uint64 len = safe_strlen("Stenopos FFI")
+    println("String length: {len}")
+
+    // C-compatible struct
+    CPoint a = CPoint { x: 0.0, y: 0.0 }
+    CPoint b = CPoint { x: 3.0, y: 4.0 }
+
+    unsafe {
+        float64 d = distance(&a, &b)
+        println("Distance: {d}")
+    }
+
+    return 0
+}

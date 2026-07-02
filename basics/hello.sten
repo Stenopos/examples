@@ -1,0 +1,5 @@
+// Hello World — the simplest Stenopos program
+
+func main() -> void {
+    println("Hello from Stenopos!")
+}

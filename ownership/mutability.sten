@@ -1,0 +1,7 @@
+// Mutability — const variables cannot be reassigned (this file should fail to compile)
+// Expected error: cannot assign to const variable 'x'
+
+func main() -> void {
+    const int32 x = 10
+    x = 20
+}

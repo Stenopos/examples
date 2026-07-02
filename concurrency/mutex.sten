@@ -1,0 +1,48 @@
+// Example: Mutex
+// Status: designed
+// Demonstrates: mutex[T] wrapping shared data, scoped locking via with block
+
+import std.concurrency.{spawn, Flight, mutex}
+import std.io.println
+
+struct Counter {
+    int64 value
+}
+
+// The mutex owns the data — you can only touch it inside the lock
+mutex[Counter] shared = mutex(Counter { value: 0 })
+
+func safe_increment(int32 times) -> void {
+    int32 i = 0
+    for (i in 0..times) {
+        // with block acquires the lock, releases it at closing brace
+        with (Counter c = shared.lock()) {
+            c.value = c.value + 1
+        }
+    }
+}
+
+func read_value() -> int64 {
+    // Read-only lock still goes through the mutex
+    with (Counter c = shared.lock()) {
+        return c.value
+    }
+}
+
+func main() -> void {
+    println("Starting mutex demo")
+
+    // Spawn 4 Flights, each incrementing 250 times
+    Flight[] flights = []
+    int32 i = 0
+    for (i in 0..4) {
+        flights.push(spawn safe_increment(250))
+    }
+    for (f in flights) {
+        f.join()
+    }
+
+    int64 result = read_value()
+    // 4 * 250 = 1000 guaranteed — no lost updates
+    println("Final value: {result} (expected 1000)")
+}

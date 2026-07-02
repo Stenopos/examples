@@ -1,0 +1,93 @@
+// Example: Closures
+// Status: designed
+// Demonstrates: lambda syntax, capture semantics, higher-order functions
+
+import std.io.println
+
+// Closure / lambda syntax: |params| -> ReturnType { body }
+func apply(int32 x, |int32| -> int32 f) -> int32 {
+    return f(x)
+}
+
+// Higher-order functions
+func map[T, U](T[] items, |T| -> U transform) -> U[] {
+    U[] result = []
+    for (item in items) {
+        result.push(transform(item))
+    }
+    return result
+}
+
+func filter[T](T[] items, |T| -> bool predicate) -> T[] {
+    T[] result = []
+    for (item in items) {
+        if (predicate(item)) {
+            result.push(item)
+        }
+    }
+    return result
+}
+
+func reduce[T, U](T[] items, U initial, |U, T| -> U accumulator) -> U {
+    U result = initial
+    for (item in items) {
+        result = accumulator(result, item)
+    }
+    return result
+}
+
+// Returning a closure
+func make_adder(int32 n) -> |int32| -> int32 {
+    return |x| -> int32 { return x + n }
+}
+
+// Closure that captures mutable state
+func make_counter() -> || -> int32 {
+    int32 count = 0
+    return || -> int32 {
+        count += 1
+        return count
+    }
+}
+
+func main() -> int32 {
+    // Inline closure
+    int32 doubled = apply(5, |x| -> int32 { return x * 2 })
+    println("Doubled: {doubled}")
+
+    // Map
+    int32[] numbers = [1, 2, 3, 4, 5]
+    int32[] squares = map(numbers, |x| -> int32 { return x * x })
+    println("Squares: {squares}")
+
+    // Filter
+    int32[] evens = filter(numbers, |x| -> bool { return x % 2 == 0 })
+    println("Evens: {evens}")
+
+    // Reduce
+    int32 sum = reduce(numbers, 0, |acc, x| -> int32 { return acc + x })
+    println("Sum: {sum}")
+
+    // Chaining
+    int32 result = reduce(
+        filter(
+            map(numbers, |x| -> int32 { return x * x }),
+            |x| -> bool { return x > 5 }
+        ),
+        0,
+        |acc, x| -> int32 { return acc + x }
+    )
+    println("Sum of squares > 5: {result}")
+
+    // Returned closure
+    |int32| -> int32 add5 = make_adder(5)
+    println("10 + 5 = {add5(10)}")
+
+    // Counter
+    || -> int32 counter = make_counter()
+    println("Count: {counter()}")
+    println("Count: {counter()}")
+    println("Count: {counter()}")
+
+    return 0
+}

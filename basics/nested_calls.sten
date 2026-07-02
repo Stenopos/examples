@@ -1,0 +1,16 @@
+// Nested calls — function calls as arguments to other functions
+
+func double(int32 x) -> int32 {
+    return x + x
+}
+
+func quadruple(int32 x) -> int32 {
+    int32 d = double(x)
+    return double(d)
+}
+
+func main() -> void {
+    int32 n = 5
+    int32 result = quadruple(n)
+    println("nested function calls complete")
+}

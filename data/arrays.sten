@@ -1,0 +1,17 @@
+// Arrays — C-style array declarations and indexing
+
+func main() -> void {
+    // Array declaration with C-style syntax
+    int64 numbers[5] = [1, 2, 3, 4, 5]
+    int64 primes[4] = [2, 3, 5, 7]
+
+    // Array indexing
+    int64 first = numbers[0]
+    int64 third = numbers[2]
+    int64 last = primes[3]
+
+    // Array in expressions
+    int64 sum = numbers[0] + numbers[1]
+
+    println("Array demo complete")
+}

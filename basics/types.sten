@@ -1,0 +1,23 @@
+// Types — demonstrates basic type declarations and usage
+
+func get_int() -> int32 {
+    return 42
+}
+
+func get_float() -> float64 {
+    return 3.14
+}
+
+func get_bool() -> bool {
+    return true
+}
+
+func main() -> void {
+    int32 a = get_int()
+    float64 b = get_float()
+    bool c = get_bool()
+
+    if (c) {
+        println("Types demo complete")
+    }
+}

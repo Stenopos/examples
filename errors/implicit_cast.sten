@@ -1,0 +1,8 @@
+// This file should fail to compile.
+// Expected error: implicit numeric conversion not allowed — use cast[int32](x) explicitly.
+
+func main() -> void {
+    // Implicit int64 -> int32 is not permitted
+    int64 x = 42
+    int32 y = x   // error: cannot implicitly convert int64 to int32
+}

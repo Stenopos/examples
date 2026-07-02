@@ -1,0 +1,35 @@
+// Example: Flights (Green Threads)
+// Status: designed
+// Demonstrates: spawn, join, lightweight M:N green threads (called Flights)
+
+import std.concurrency.{spawn, Flight}
+import std.io.println
+
+// Each Flight runs on a lightweight green thread — cheap to create, M:N scheduled
+func worker(int32 id) -> void {
+    println("Flight {id} taking off")
+    // Simulate some work
+    int32 result = id * id
+    println("Flight {id} landed with result {result}")
+}
+
+func flock_work(int32 count) -> void {
+    // A flock of Flights — all spawned, then all joined
+    Flight[] flock = []
+    int32 i = 0
+    for (i in 0..count) {
+        Flight f = spawn worker(i)
+        flock.push(f)
+    }
+
+    // Wait for the whole flock to land
+    for (f in flock) {
+        f.join()
+    }
+}
+
+func main() -> void {
+    println("Spawning a flock of Flights...")
+    flock_work(5)
+    println("All Flights have landed")
+}

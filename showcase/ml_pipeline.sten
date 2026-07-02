@@ -1,0 +1,165 @@
+// Example: Machine Learning Pipeline
+// Status: designed
+// Demonstrates: Flights, channels, generics, traits, effects, FFI (BLAS), unsafe
+
+import std.io.{println, read_file}
+import std.math.{sqrt, exp, log}
+
+// --- Data types ---
+
+struct Matrix {
+    uint64 rows
+    uint64 cols
+    ptr[float64] data
+}
+
+struct Dataset {
+    Matrix features     // N x D
+    Matrix labels       // N x 1
+    uint64 num_samples
+    uint64 num_features
+}
+
+// --- Linear algebra (FFI to BLAS) ---
+
+extern "C" func cblas_dgemm(
+    int32 order, int32 transA, int32 transB,
+    int32 m, int32 n, int32 k,
+    float64 alpha, ptr[float64] a, int32 lda,
+    ptr[float64] b, int32 ldb,
+    float64 beta, ptr[float64] c, int32 ldc
+) -> void
+
+func mat_mul(Matrix a, Matrix b) -> Matrix {
+    Matrix result = mat_zeros(a.rows, b.cols)
+    unsafe {
+        cblas_dgemm(
+            101, 111, 111,
+            cast[int32](a.rows), cast[int32](b.cols), cast[int32](a.cols),
+            1.0, a.data, cast[int32](a.cols),
+            b.data, cast[int32](b.cols),
+            0.0, result.data, cast[int32](result.cols)
+        )
+    }
+    return result
+}
+
+func mat_zeros(uint64 rows, uint64 cols) -> Matrix {
+    uint64 size = rows * cols * 8
+    unsafe {
+        ptr[float64] data = cast[ptr[float64]](malloc(size))
+        for (i in 0..<(rows * cols)) {
+            *(data + i) = 0.0
+        }
+        return Matrix { rows: rows, cols: cols, data: data }
+    }
+}
+
+// --- Model trait ---
+
+trait Model {
+    func train(Dataset data) -> void
+    func predict(Matrix features) -> Matrix
+
+    // Default implementation — compute accuracy
+    func evaluate(Dataset test) -> float64 {
+        Matrix predictions = this.predict(test.features)
+        int32 correct = 0
+        for (i in 0..<test.num_samples) {
+            unsafe {
+                if (*(predictions.data + i) == *(test.labels.data + i)) {
+                    correct += 1
+                }
+            }
+        }
+        return cast[float64](correct) / cast[float64](test.num_samples)
+    }
+}
+
+// --- Logistic Regression ---
+
+struct LogisticRegression {
+    Matrix weights
+    float64 learning_rate
+    int32 epochs
+}
+
+func sigmoid(float64 x) -> float64 {
+    return 1.0 / (1.0 + exp(-x))
+}
+
+impl Model for LogisticRegression {
+    func train(Dataset data) -> void {
+        this.weights = mat_zeros(data.num_features, 1)
+
+        for (epoch in 0..<this.epochs) {
+            // Forward pass
+            Matrix logits = mat_mul(data.features, this.weights)
+
+            // Compute gradients and update weights
+            // (simplified — real impl would compute cross-entropy gradient)
+            println("Epoch {epoch}: training...")
+        }
+    }
+
+    func predict(Matrix features) -> Matrix {
+        Matrix logits = mat_mul(features, this.weights)
+        Matrix result = mat_zeros(logits.rows, 1)
+        for (i in 0..<logits.rows) {
+            unsafe {
+                float64 prob = sigmoid(*(logits.data + i))
+                *(result.data + i) = if (prob > 0.5) 1.0 else 0.0
+            }
+        }
+        return result
+    }
+}
+
+// --- Parallel data loading with Flights ---
+
+@io
+func load_dataset(str path) -> Dataset {
+    // In a real implementation, parse CSV/HDF5
+    println("Loading dataset from {path}...")
+    return Dataset {
+        features: mat_zeros(100, 10),
+        labels: mat_zeros(100, 1),
+        num_samples: 100,
+        num_features: 10
+    }
+}
+
+// --- Pipeline ---
+
+@io
+func main() -> int32 {
+    // Load train and test data in parallel using Flights
+    chan[Dataset] train_ch = chan()
+    chan[Dataset] test_ch = chan()
+
+    spawn {
+        Dataset train = load_dataset("data/train.csv")
+        train_ch.send(train)
+    }
+    spawn {
+        Dataset test = load_dataset("data/test.csv")
+        test_ch.send(test)
+    }
+
+    Dataset train_data = train_ch.recv()
+    Dataset test_data = test_ch.recv()
+
+    // Train model
+    LogisticRegression model = LogisticRegression {
+        weights: mat_zeros(0, 0),
+        learning_rate: 0.01,
+        epochs: 100
+    }
+    model.train(train_data)
+
+    // Evaluate
+    float64 accuracy = model.evaluate(test_data)
+    println("Test accuracy: {accuracy}")
+
+    return 0
+}

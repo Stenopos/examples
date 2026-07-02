@@ -1,0 +1,132 @@
+// Example: Cross-Platform CLI Application
+// Status: designed
+// Demonstrates: modules, error handling, string processing, match, enums, traits
+
+import std.io.{println, eprintln, read_file, write_file}
+import std.string.{split, join, trim}
+
+enum OutputFormat : int32 {
+    Text = 0
+    Json = 1
+    Csv = 2
+}
+
+struct Config {
+    str input_path
+    str output_path
+    OutputFormat format
+    bool verbose
+}
+
+trait Formatter {
+    func format(str[] lines) -> str
+}
+
+struct TextFormatter {}
+struct JsonFormatter {}
+struct CsvFormatter {}
+
+impl Formatter for TextFormatter {
+    func format(str[] lines) -> str {
+        return join(lines, "\n")
+    }
+}
+
+impl Formatter for JsonFormatter {
+    func format(str[] lines) -> str {
+        str result = "[\n"
+        for (i, line in lines) {
+            result += "  \"{line}\""
+            if (i < lines.len() - 1) {
+                result += ","
+            }
+            result += "\n"
+        }
+        result += "]"
+        return result
+    }
+}
+
+impl Formatter for CsvFormatter {
+    func format(str[] lines) -> str {
+        str result = "line_number,content\n"
+        for (i, line in lines) {
+            result += "{i + 1},\"{line}\"\n"
+        }
+        return result
+    }
+}
+
+func parse_args(str[] args) -> Config {
+    Config config = Config {
+        input_path: "",
+        output_path: "",
+        format: OutputFormat.Text,
+        verbose: false
+    }
+
+    int32 i = 1
+    while (i < args.len()) {
+        match (args[i]) {
+            case "-o" {
+                i += 1
+                config.output_path = args[i]
+            }
+            case "--format" {
+                i += 1
+                match (args[i]) {
+                    case "json" { config.format = OutputFormat.Json }
+                    case "csv" { config.format = OutputFormat.Csv }
+                    case _ { config.format = OutputFormat.Text }
+                }
+            }
+            case "-v" {
+                config.verbose = true
+            }
+            case _ {
+                config.input_path = args[i]
+            }
+        }
+        i += 1
+    }
+
+    return config
+}
+
+@io
+func main() -> int32 {
+    Config config = parse_args(get_args())
+
+    if (config.input_path == "") {
+        eprintln("Usage: tool <input> [-o output] [--format text|json|csv] [-v]")
+        return 1
+    }
+
+    try {
+        str content = read_file(config.input_path)
+        str[] lines = split(content, "\n")
+
+        if (config.verbose) {
+            println("Read {lines.len()} lines from {config.input_path}")
+        }
+
+        // Select formatter based on output format
+        str output = match (config.format) {
+            case OutputFormat.Json { JsonFormatter{}.format(lines) }
+            case OutputFormat.Csv { CsvFormatter{}.format(lines) }
+            case _ { TextFormatter{}.format(lines) }
+        }
+
+        if (config.output_path != "") {
+            write_file(config.output_path, output)
+            println("Written to {config.output_path}")
+        } else {
+            println(output)
+        }
+    } catch (IOError e) {
+        eprintln("Error: {e.message}")
+        return 1
+    }
+
+    return 0
+}

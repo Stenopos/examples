@@ -1,0 +1,78 @@
+// Classes — inheritance, override, abstract, and visibility modifiers
+
+class Animal {
+    str name
+    int64 age
+
+    func speak(int64 self) -> void {
+        println("generic animal sound")
+    }
+
+    func describe(int64 self) -> void {
+        println("I am an animal")
+    }
+}
+
+class Dog inherits Animal {
+    str breed
+
+    override func speak(int64 self) -> void {
+        println("Woof!")
+    }
+
+    func fetch(int64 self) -> void {
+        println("Fetching ball...")
+    }
+}
+
+class Cat inherits Animal {
+    bool indoor
+
+    override func speak(int64 self) -> void {
+        println("Meow!")
+    }
+
+    func purr(int64 self) -> void {
+        println("Purring...")
+    }
+}
+
+abstract class Shape {
+    func area(int64 self) -> float64 {
+        return 0.0
+    }
+
+    func perimeter(int64 self) -> float64 {
+        return 0.0
+    }
+}
+
+class Rectangle inherits Shape {
+    float64 width
+    float64 height
+
+    override func area(int64 self) -> float64 {
+        return 0.0
+    }
+}
+
+class Counter {
+    int64 count
+    pub str name
+
+    pub func increment(int64 self) -> void {
+        println("incrementing")
+    }
+
+    pub func get_count(int64 self) -> int64 {
+        return 0
+    }
+
+    func reset(int64 self) -> void {
+        println("resetting")
+    }
+}
+
+func main() -> void {
+    println("Classes demonstration complete")
+}

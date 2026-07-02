@@ -1,0 +1,58 @@
+// Example: Atomic Types
+// Status: designed
+// Demonstrates: atomic[T] load/store/fetch_add/compare_swap for lock-free shared state
+
+import std.concurrency.{spawn, Flight, atomic}
+import std.io.println
+
+// Shared counter — atomic so no data race across Flights
+atomic[int64] counter = atomic(0)
+
+func increment_worker(int32 iterations) -> void {
+    int32 i = 0
+    for (i in 0..iterations) {
+        counter.fetch_add(1)
+    }
+}
+
+func demo_basic_ops() -> void {
+    println("--- Basic atomic operations ---")
+    atomic[int64] val = atomic(0)
+
+    // Store a value
+    val.store(42)
+
+    // Load the value
+    int64 v = val.load()
+    println("Stored and loaded: {v}")
+
+    // Fetch-and-add: returns the old value
+    int64 old = val.fetch_add(10)
+    println("fetch_add(10): old={old}, new={val.load()}")
+
+    // Compare-and-swap: only writes if current value matches expected
+    bool swapped = val.compare_swap(52, 100)
+    println("compare_swap(52, 100): swapped={swapped}, val={val.load()}")
+}
+
+func demo_concurrent_counter() -> void {
+    println("--- Concurrent counter ---")
+    counter.store(0)
+
+    Flight[] flights = []
+    int32 i = 0
+    for (i in 0..4) {
+        flights.push(spawn increment_worker(250))
+    }
+    for (f in flights) {
+        f.join()
+    }
+
+    // 4 Flights * 250 iterations = 1000 (no races thanks to atomics)
+    println("Final counter: {counter.load()} (expected 1000)")
+}
+
+func main() -> void {
+    demo_basic_ops()
+    demo_concurrent_counter()
+}

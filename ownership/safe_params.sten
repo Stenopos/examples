@@ -1,0 +1,13 @@
+// Safe params — primitive parameters are passed by copy, safe to reuse
+
+func add(int32 a, int32 b) -> int32 {
+    return a + b
+}
+
+func main() -> void {
+    int32 x = 10
+    int32 y = 20
+    int32 z = add(x, y)
+    int32 w = add(x, y)
+    println("i32 params are copyable")
+}
