@@ -21,8 +21,6 @@ on:
   # A weekly canary so regressions in the latest release surface on their own.
   schedule:
     - cron: "0 6 * * 1"
-  push:
-    branches: [main]
 
 permissions:
   contents: read
