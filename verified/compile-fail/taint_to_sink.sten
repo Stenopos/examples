@@ -1,0 +1,11 @@
+@tainted
+func get_input() -> str {
+    return "user data"
+}
+@sink
+func exec_sql(str q) -> void {
+}
+func main() -> void {
+    str q = "SELECT " + get_input()
+    exec_sql(q)
+}

@@ -1,0 +1,14 @@
+// String variables, concatenation, equality, interpolation.
+func main() -> void {
+    str a = "Hello"
+    str b = "World"
+    str both = a + ", " + b + "!"
+    println(both)
+    if (a == "Hello") {
+        println("equal")
+    }
+    if (a != b) {
+        println("not equal")
+    }
+    println("len-safe interp: {a} + {b}")
+}

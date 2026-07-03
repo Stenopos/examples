@@ -1,0 +1,22 @@
+// Structs — declaration, literals, field read/write, nesting.
+struct Point {
+    int32 x
+    int32 y
+}
+struct Line {
+    Point start
+    Point end
+}
+func main() -> void {
+    Point p = Point { x: 3, y: 4 }
+    println("p = ({p.x}, {p.y})")
+    p.x = 10
+    p.x += 5
+    println("p.x = {p.x}")
+
+    Line l = Line { start: Point { x: 0, y: 0 }, end: Point { x: 6, y: 8 } }
+    l.end.y = 9
+    println("line end = ({l.end.x}, {l.end.y})")
+    int32 span = l.end.x - l.start.x
+    println("x span = {span}")
+}

@@ -1,0 +1,3 @@
+func main() -> void {
+    int32 x = y + 1
+}

@@ -1,0 +1,19 @@
+// if / else if / else, logical operators, nesting.
+func classify(int32 x) -> str {
+    if (x > 100) {
+        return "big"
+    } else if (x > 10) {
+        return "medium"
+    } else {
+        if (x > 0 && x <= 10) {
+            return "small"
+        }
+        return "non-positive"
+    }
+}
+func main() -> void {
+    println(classify(500))
+    println(classify(50))
+    println(classify(5))
+    println(classify(-5))
+}

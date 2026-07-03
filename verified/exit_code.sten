@@ -1,0 +1,5 @@
+// stenopos run propagates the program's exit code.
+func main() -> int32 {
+    println("exiting with 7")
+    return 7
+}

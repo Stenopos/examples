@@ -1,0 +1,17 @@
+// Fixed-size arrays — literals, indexing, mutation, iteration.
+// Status: implemented
+func main() -> void {
+    int32[5] nums = [10, 20, 30, 40, 50]
+    println("first = {nums[0]}")
+    nums[1] = 99
+    nums[4] += 1
+
+    int32 total = 0
+    for (n in nums) {
+        total += n
+    }
+    println("total = {total}")
+
+    int32 i = 3
+    println("nums[3] = {nums[i]}")
+}

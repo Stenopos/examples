@@ -1,0 +1,4 @@
+func main() -> void {
+    int32 x = 5
+    float64 f = x
+}

@@ -1,0 +1,5 @@
+// The classic — string interpolation and println.
+func main() -> void {
+    str name = "Stenopos"
+    println("Hello, {name}!")
+}

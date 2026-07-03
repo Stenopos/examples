@@ -1,0 +1,20 @@
+// Short-circuit && and || — the right side is skipped when the left decides.
+// Status: implemented
+func loud(bool value, str tag) -> bool {
+    println("evaluated {tag}")
+    return value
+}
+func main() -> void {
+    // false && _ : right side must not run
+    if (loud(false, "A") && loud(true, "B")) {
+        println("both")
+    }
+    // true || _ : right side must not run
+    if (loud(true, "C") || loud(true, "D")) {
+        println("either")
+    }
+    int32 x = 5
+    if (x > 0 && x < 10) {
+        println("in range")
+    }
+}

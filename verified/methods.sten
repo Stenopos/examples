@@ -1,0 +1,43 @@
+// Struct methods — implicit `this` receiver, field mutation, arguments.
+// Status: implemented
+//
+// Methods take `this` (the receiver) by reference, so mutations persist to
+// the caller. Read-only methods and methods with arguments both work.
+struct Rect {
+    int32 width
+    int32 height
+
+    func area() -> int32 {
+        return this.width * this.height
+    }
+
+    func scale(int32 factor) -> void {
+        this.width = this.width * factor
+        this.height = this.height * factor
+    }
+}
+
+struct Counter {
+    int32 count
+
+    func increment() -> void {
+        this.count += 1
+    }
+
+    func get() -> int32 {
+        return this.count
+    }
+}
+
+func main() -> void {
+    Rect r = Rect { width: 3, height: 4 }
+    println("area = {r.area()}")
+    r.scale(10)
+    println("scaled = ({r.width}, {r.height})")
+    println("area now = {r.area()}")
+
+    Counter c = Counter { count: 0 }
+    c.increment()
+    c.increment()
+    println("count = {c.get()}")
+}

@@ -1,0 +1,66 @@
+name: Verify examples against released compiler
+
+# The public stability signal: download a real Stenopos release binary and
+# compile + run every verified example against it. This exercises the SHIPPED
+# artifact, independent of the (private) compiler source and its CI — so even
+# if the release pipeline hiccups, this still reports whether what users can
+# download actually works.
+
+on:
+  # Run when a new compiler release is published (the stenopos repo sends a
+  # repository_dispatch of type "release" via its release pipeline).
+  repository_dispatch:
+    types: [release]
+  # Manual runs, optionally pinned to a specific version tag.
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Release tag to verify (blank = latest)"
+        required: false
+        default: ""
+  # A weekly canary so regressions in the latest release surface on their own.
+  schedule:
+    - cron: "0 6 * * 1"
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install LLVM and a C compiler
+        run: sudo apt-get update && sudo apt-get install -y llvm clang
+
+      - name: Download the Stenopos release binary
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REQUESTED: ${{ github.event.inputs.version || github.event.client_payload.version }}
+        run: |
+          set -euo pipefail
+          REPO="Stenopos/Syntagma"
+          if [ -n "${REQUESTED:-}" ]; then
+            TAG="$REQUESTED"
+          else
+            TAG="$(gh release view --repo "$REPO" --json tagName -q .tagName)"
+          fi
+          echo "Verifying release: $TAG"
+          gh release download "$TAG" --repo "$REPO" \
+            -p 'stenopos-linux-x86_64' -p 'SHA256SUMS' -D dl
+          # Verify the checksum of the binary we downloaded.
+          ( cd dl && grep 'stenopos-linux-x86_64' SHA256SUMS | sha256sum -c - )
+          install -m 0755 dl/stenopos-linux-x86_64 /usr/local/bin/stenopos
+          echo "TAG=$TAG" >> "$GITHUB_ENV"
+
+      - name: Run the verified example suite
+        run: |
+          chmod +x verified/verify.sh
+          STENOPOS=stenopos ./verified/verify.sh
+
+      - name: Summary
+        if: always()
+        run: echo "Verified examples against ${TAG:-latest}. See job log for per-example results." >> "$GITHUB_STEP_SUMMARY"

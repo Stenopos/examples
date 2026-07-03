@@ -1,0 +1,11 @@
+// Function calls, params, return values, forward references, void calls.
+func main() -> void {
+    println("{add(20, 22)}")
+    greet("world")
+}
+func add(int32 a, int32 b) -> int32 {
+    return a + b
+}
+func greet(str who) -> void {
+    println("hi {who}")
+}

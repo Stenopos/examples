@@ -1,0 +1,9 @@
+// Integer and float arithmetic, casts, precedence.
+func main() -> void {
+    int32 x = (20 + 22) * 2 - 10
+    println("{x}")
+    int64 big = 5000000000
+    println("{big}")
+    float64 f = cast[float64](x) / 2.0
+    println("{f}")
+}

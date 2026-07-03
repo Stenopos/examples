@@ -1,0 +1,19 @@
+// break and continue in loops.
+func main() -> void {
+    int32 sum = 0
+    for (i in 0..100) {
+        if (i == 5) {
+            break
+        }
+        sum += i
+    }
+    println("{sum}")
+    int32 odds = 0
+    for (j in 0..<10) {
+        if (j % 2 == 0) {
+            continue
+        }
+        odds += 1
+    }
+    println("{odds}")
+}

@@ -1,0 +1,11 @@
+enum Color : int32 {
+    Red = 0
+    Green = 1
+    Blue = 2
+}
+func main() -> void {
+    Color c = Color.Red
+    match (c) {
+        case Color.Red: println("r")
+    }
+}

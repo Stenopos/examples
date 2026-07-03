@@ -1,0 +1,26 @@
+// Enums with backing types, variant access, match with exhaustiveness.
+enum Color : int32 {
+    Red = 0
+    Green = 1
+    Blue = 2
+}
+func name_of(Color c) -> str {
+    match (c) {
+        case Color.Red: return "red"
+        case Color.Green: return "green"
+        case Color.Blue: return "blue"
+    }
+    return "unreachable"
+}
+func main() -> void {
+    println(name_of(Color.Green))
+    match (42) {
+        case 41: println("no")
+        case 42: println("int match")
+        case _: println("fallback")
+    }
+    match ("hi") {
+        case "hi": println("string match")
+        case _: println("no")
+    }
+}
