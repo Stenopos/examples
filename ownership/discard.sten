@@ -1,4 +1,5 @@
 // Discard — explicitly discarding non-void return values
+// Status: designed
 
 func add(int32 a, int32 b) -> int32 {
     return a + b

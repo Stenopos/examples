@@ -16,31 +16,31 @@ enum HttpStatus : int32 {
 
 func main() -> int32 {
     // Match on a simple enum
-    Color my_color = Color::Red
+    Color my_color = Color.Red
     int32 color_result = 0
     match (my_color) {
-        case Color::Red {
+        case Color.Red {
             color_result = 1
         }
-        case Color::Green {
+        case Color.Green {
             color_result = 2
         }
-        case Color::Blue {
+        case Color.Blue {
             color_result = 3
         }
     }
 
     // Match on an enum with explicit values
-    HttpStatus status = HttpStatus::NotFound
+    HttpStatus status = HttpStatus.NotFound
     int32 status_result = 0
     match (status) {
-        case HttpStatus::Ok {
+        case HttpStatus.Ok {
             status_result = 200
         }
-        case HttpStatus::NotFound {
+        case HttpStatus.NotFound {
             status_result = 404
         }
-        case HttpStatus::ServerError {
+        case HttpStatus.ServerError {
             status_result = 500
         }
     }

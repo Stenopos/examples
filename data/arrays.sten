@@ -1,4 +1,5 @@
 // Arrays — C-style array declarations and indexing
+// Status: designed
 
 func main() -> void {
     // Array declaration with C-style syntax

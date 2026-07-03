@@ -1,36 +1,33 @@
-// Match — pattern matching on values and ranges
+// Match — pattern matching on literal values with a catch-all
+// Status: implemented
+//
+// Stenopos `match` requires either exhaustive coverage or a `case _:` arm.
+// Range patterns (`case 2..10:`) are planned; this example uses literals.
+
+func describe(int64 x) -> str {
+    match (x) {
+        case 0: return "zero"
+        case 1: return "one"
+        case 2: return "two"
+        case _: return "many"
+    }
+    return "unreachable"
+}
+
+func http_message(int64 status) -> str {
+    match (status) {
+        case 200: return "OK"
+        case 404: return "Not Found"
+        case 500: return "Server Error"
+        case _: return "Unknown status"
+    }
+    return "unreachable"
+}
 
 func main() -> void {
-    int64 x = 5
-
-    match (x) {
-        case 0 {
-            println("zero")
-        }
-        case 1 {
-            println("one")
-        }
-        case 2..10 {
-            println("small number")
-        }
-        case _ {
-            println("large number")
-        }
-    }
-
-    int64 status = 200
-    match (status) {
-        case 200 {
-            println("OK")
-        }
-        case 404 {
-            println("Not Found")
-        }
-        case 500 {
-            println("Server Error")
-        }
-        case _ {
-            println("Unknown status")
-        }
-    }
+    println(describe(0))
+    println(describe(2))
+    println(describe(42))
+    println(http_message(404))
+    println(http_message(200))
 }

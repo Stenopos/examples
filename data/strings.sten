@@ -1,4 +1,5 @@
 // Strings — string methods: len, contains, starts_with, ends_with, trim, to_upper, to_lower, replace
+// Status: designed
 
 func main() -> void {
     // len

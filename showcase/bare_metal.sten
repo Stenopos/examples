@@ -1,135 +1,247 @@
-// Example: Bare Metal x86_64 — Minimal OS Kernel
+// Example: Raspberry Pi Bare-Metal Kernel (aarch64)
 // Status: designed
-// Demonstrates: inline assembly, unsafe, raw pointers, @no_return, @packed, @aligned, FFI
+// Demonstrates: freestanding/no-std, MMIO via raw pointers, unsafe, @no_return,
+//               @section for the boot entry, volatile device registers
+//
+// A minimal kernel for the Raspberry Pi 3/4 (AArch64). The bootloader loads
+// kernel8.img at 0x80000 and enters `_start`; we set up a stack, park the
+// secondary cores, initialise the PL011 UART, and run a tiny serial shell.
+//
+// Peripheral base:
+//   Pi 3  (BCM2837): 0x3F00_0000
+//   Pi 4  (BCM2711): 0xFE00_0000   <- change PERIPHERAL_BASE for a Pi 4
+//
+// Build (conceptual — the freestanding target is Phase 18):
+//   stenopos build --target aarch64-none-elf --no-std bare_metal.sten
+//   llvm-objcopy -O binary bare_metal kernel8.img   # copy to the SD card
+// Run under QEMU:
+//   qemu-system-aarch64 -M raspi3b -kernel kernel8.img -serial stdio
 
-// No standard library — bare metal, freestanding environment
+// ---------------------------------------------------------------------------
+// Memory-mapped I/O
+// ---------------------------------------------------------------------------
 
-// VGA text mode buffer at 0xB8000
-const uint64 VGA_BUFFER = 0xB8000
-const int32 VGA_WIDTH = 80
-const int32 VGA_HEIGHT = 25
+// Pi 3 peripheral base. For a Pi 4 use 0xFE000000.
+const uint64 PERIPHERAL_BASE = 0x3F000000
 
-@packed
-struct VgaChar {
-    uint8 character
-    uint8 color
-}
+// GPIO
+const uint64 GPIO_BASE = PERIPHERAL_BASE + 0x200000
+const uint64 GPFSEL1   = GPIO_BASE + 0x04    // function select for pins 10-19
+const uint64 GPPUD     = GPIO_BASE + 0x94    // pull-up/down enable
+const uint64 GPPUDCLK0 = GPIO_BASE + 0x98    // pull-up/down clock
 
-// VGA colors
-enum VgaColor : uint8 {
-    Black = 0
-    Blue = 1
-    Green = 2
-    Cyan = 3
-    Red = 4
-    Magenta = 5
-    Brown = 6
-    LightGrey = 7
-    DarkGrey = 8
-    LightBlue = 9
-    LightGreen = 10
-    LightCyan = 11
-    LightRed = 12
-    Pink = 13
-    Yellow = 14
-    White = 15
-}
+// PL011 UART0
+const uint64 UART0_BASE = PERIPHERAL_BASE + 0x201000
+const uint64 UART0_DR   = UART0_BASE + 0x00  // data register
+const uint64 UART0_FR   = UART0_BASE + 0x18  // flag register
+const uint64 UART0_IBRD = UART0_BASE + 0x24  // integer baud rate divisor
+const uint64 UART0_FBRD = UART0_BASE + 0x28  // fractional baud rate divisor
+const uint64 UART0_LCRH = UART0_BASE + 0x2C  // line control
+const uint64 UART0_CR   = UART0_BASE + 0x30  // control
+const uint64 UART0_IMSC = UART0_BASE + 0x38  // interrupt mask
 
-static int32 cursor_x = 0
-static int32 cursor_y = 0
-static uint8 current_color = 15  // white on black
+// UART flag register bits
+const uint32 UART_FR_RXFE = 0x10             // receive FIFO empty
+const uint32 UART_FR_TXFF = 0x20             // transmit FIFO full
 
-// Entry point — called by bootloader
-@no_return
-pub func _start() -> void {
-    clear_screen()
-    set_color(VgaColor.LightGreen, VgaColor.Black)
-    print_str("Stenopos OS v0.1.0")
-    newline()
-    set_color(VgaColor.White, VgaColor.Black)
-    print_str("Memory-safe bare metal, written in Stenopos.")
-    newline()
-    newline()
-    print_str("> ")
+// ---------------------------------------------------------------------------
+// Volatile MMIO helpers — every device access must be a real load/store.
+// ---------------------------------------------------------------------------
 
-    // Halt — wait for interrupts
-    halt_loop()
-}
-
-func clear_screen() -> void {
+func mmio_write(uint64 addr, uint32 value) -> void {
     unsafe {
-        ptr[VgaChar] buffer = cast[ptr[VgaChar]](VGA_BUFFER)
-        for (i in 0..<(VGA_WIDTH * VGA_HEIGHT)) {
-            ptr[VgaChar] cell = buffer + i
-            (*cell).character = 0x20  // space
-            (*cell).color = current_color
-        }
+        ptr[uint32] reg = cast[ptr[uint32]](addr)
+        *reg = value
     }
-    cursor_x = 0
-    cursor_y = 0
 }
 
-func put_char(uint8 ch) -> void {
-    if (cursor_y >= VGA_HEIGHT) {
-        scroll_up()
-        cursor_y = VGA_HEIGHT - 1
-    }
-
+func mmio_read(uint64 addr) -> uint32 {
     unsafe {
-        ptr[VgaChar] buffer = cast[ptr[VgaChar]](VGA_BUFFER)
-        int32 offset = cursor_y * VGA_WIDTH + cursor_x
-        ptr[VgaChar] cell = buffer + offset
-        (*cell).character = ch
-        (*cell).color = current_color
-    }
-
-    cursor_x += 1
-    if (cursor_x >= VGA_WIDTH) {
-        cursor_x = 0
-        cursor_y += 1
+        ptr[uint32] reg = cast[ptr[uint32]](addr)
+        return *reg
     }
 }
 
-func print_str(str s) -> void {
+// Crude busy-wait; the compiler must not optimise this away.
+func delay(uint32 cycles) -> void {
+    uint32 i = 0
+    while (i < cycles) {
+        i += 1
+    }
+}
+
+// ---------------------------------------------------------------------------
+// PL011 UART driver
+// ---------------------------------------------------------------------------
+
+func uart_init() -> void {
+    // 1. Disable the UART.
+    mmio_write(UART0_CR, 0)
+
+    // 2. Route GPIO14/15 to the UART (alt function 0) by clearing their
+    //    pull-up/down state.
+    mmio_write(GPPUD, 0)
+    delay(150)
+    mmio_write(GPPUDCLK0, (1 << 14) | (1 << 15))
+    delay(150)
+    mmio_write(GPPUDCLK0, 0)
+
+    // 3. Baud rate = 115200 for a 48 MHz UART clock:
+    //    divisor = 48e6 / (16 * 115200) = 26.041...  -> IBRD=26, FBRD=3
+    mmio_write(UART0_IBRD, 26)
+    mmio_write(UART0_FBRD, 3)
+
+    // 4. 8-bit words, enable FIFOs (bits: WLEN=0b11 << 5, FEN << 4).
+    mmio_write(UART0_LCRH, (1 << 4) | (1 << 5) | (1 << 6))
+
+    // 5. Mask all interrupts (we poll).
+    mmio_write(UART0_IMSC, 0)
+
+    // 6. Enable UART, transmit, and receive.
+    mmio_write(UART0_CR, (1 << 0) | (1 << 8) | (1 << 9))
+}
+
+func uart_put(uint8 byte) -> void {
+    // Wait until the transmit FIFO has room.
+    while ((mmio_read(UART0_FR) & UART_FR_TXFF) != 0) {
+        // spin
+    }
+    mmio_write(UART0_DR, cast[uint32](byte))
+}
+
+func uart_get() -> uint8 {
+    // Wait until the receive FIFO has a byte.
+    while ((mmio_read(UART0_FR) & UART_FR_RXFE) != 0) {
+        // spin
+    }
+    return cast[uint8](mmio_read(UART0_DR) & 0xFF)
+}
+
+func uart_write(str s) -> void {
     for (i in 0..<s.len()) {
-        put_char(cast[uint8](s[i]))
+        uint8 ch = cast[uint8](s[i])
+        // Translate LF to CRLF for serial terminals.
+        if (ch == 0x0A) {
+            uart_put(0x0D)
+        }
+        uart_put(ch)
     }
 }
 
-func newline() -> void {
-    cursor_x = 0
-    cursor_y += 1
+func uart_writeln(str s) -> void {
+    uart_write(s)
+    uart_put(0x0D)
+    uart_put(0x0A)
 }
 
-func set_color(VgaColor fg, VgaColor bg) -> void {
-    current_color = cast[uint8](bg) << 4 | cast[uint8](fg)
+// ---------------------------------------------------------------------------
+// A tiny serial shell
+// ---------------------------------------------------------------------------
+
+func banner() -> void {
+    uart_writeln("")
+    uart_writeln("  Stenopos OS — Raspberry Pi bare metal (aarch64)")
+    uart_writeln("  Memory-safe systems code, no libc, no allocator.")
+    uart_writeln("  Commands: help, ping, halt")
+    uart_writeln("")
 }
 
-func scroll_up() -> void {
+// Read one CR/LF-terminated line into a fixed buffer, echoing as we go.
+// Returns the number of bytes read.
+func read_line(ptr[uint8] buffer, int32 max) -> int32 {
+    int32 len = 0
+    while (len < max - 1) {
+        uint8 ch = uart_get()
+        if (ch == 0x0D || ch == 0x0A) {
+            uart_put(0x0D)
+            uart_put(0x0A)
+            break
+        }
+        // Backspace / delete.
+        if ((ch == 0x08 || ch == 0x7F) && len > 0) {
+            len -= 1
+            uart_write("\b \b")
+            continue
+        }
+        uart_put(ch)          // echo
+        unsafe {
+            ptr[uint8] slot = buffer + len
+            *slot = ch
+        }
+        len += 1
+    }
     unsafe {
-        ptr[VgaChar] buffer = cast[ptr[VgaChar]](VGA_BUFFER)
-        // Copy each row up by one
-        for (row in 1..<VGA_HEIGHT) {
-            for (col in 0..<VGA_WIDTH) {
-                int32 dst = (row - 1) * VGA_WIDTH + col
-                int32 src = row * VGA_WIDTH + col
-                *(buffer + dst) = *(buffer + src)
+        ptr[uint8] terminator = buffer + len
+        *terminator = 0
+    }
+    return len
+}
+
+// Compare a NUL-terminated command buffer against a literal.
+func matches(ptr[uint8] buffer, str command) -> bool {
+    for (i in 0..<command.len()) {
+        unsafe {
+            ptr[uint8] slot = buffer + cast[int32](i)
+            if (*slot != cast[uint8](command[i])) {
+                return false
             }
         }
-        // Clear the last row
-        for (col in 0..<VGA_WIDTH) {
-            int32 offset = (VGA_HEIGHT - 1) * VGA_WIDTH + col
-            (*(buffer + offset)).character = 0x20
-            (*(buffer + offset)).color = current_color
-        }
+    }
+    // Ensure the command ended here (next byte is the NUL terminator).
+    unsafe {
+        ptr[uint8] slot = buffer + cast[int32](command.len())
+        return *slot == 0
     }
 }
 
 @no_return
-func halt_loop() -> void {
+func shell() -> void {
+    uint8[64] line_storage = zeroed()
     repeat {
-        asm {
-            "hlt"
+        uart_write("stenopos> ")
+        ptr[uint8] buffer = &line_storage[0]
+        int32 n = read_line(buffer, 64)
+        if (n == 0) {
+            continue
+        }
+        if (matches(buffer, "help")) {
+            uart_writeln("help  - show this message")
+            uart_writeln("ping  - reply pong")
+            uart_writeln("halt  - stop the CPU")
+        } else if (matches(buffer, "ping")) {
+            uart_writeln("pong")
+        } else if (matches(buffer, "halt")) {
+            uart_writeln("halting.")
+            halt()
+        } else {
+            uart_writeln("unknown command (try: help)")
+        }
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Boot entry
+// ---------------------------------------------------------------------------
+
+// Placed in the .text.boot section so the linker script puts it first, at
+// the load address the GPU jumps to (0x80000).
+@section(".text.boot")
+@no_return
+pub func _start() -> void {
+    uart_init()
+    banner()
+    shell()
+}
+
+// Park the CPU: wait-for-interrupt forever. On real hardware this is the
+// `wfe` instruction; inline asm keeps the core from spinning hot.
+@no_return
+func halt() -> void {
+    repeat {
+        unsafe {
+            asm {
+                "wfe"
+            }
         }
     }
 }

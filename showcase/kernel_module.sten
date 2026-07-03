@@ -1,87 +1,174 @@
-// Example: Linux Kernel Module
+// Example: Linux Kernel Module — a character device
 // Status: designed
-// Demonstrates: FFI, unsafe blocks, @repr("C"), raw pointers, inline assembly, @no_return
+// Demonstrates: FFI to the kernel C ABI, @repr("C") structs, @section for
+//               module metadata, unsafe, raw pointers
+//
+// A standard, benign loadable kernel module: it creates a character device
+// that returns a fixed greeting when read and logs whatever you write to it.
+// This is the classic "hello world" LKM — the same thing you'd get from a C
+// tutorial, expressed in Stenopos via FFI to the kernel's C interface.
+//
+// It hooks nothing, hides nothing, and touches no other process. Load it,
+// read the device, unload it:
+//
+//   sudo insmod stenopos_hello.ko
+//   sudo mknod /dev/stenopos_hello c $(awk '/stenopos_hello/{print $1}' /proc/devices) 0
+//   cat /dev/stenopos_hello            # -> "Hello from a Stenopos kernel module!"
+//   echo "hi kernel" > /dev/stenopos_hello
+//   dmesg | tail                     # -> logs the write
+//   sudo rmmod stenopos_hello
+//
+// NOTE: emitting a real .ko needs freestanding kernel-ABI codegen and the
+// kernel's Kbuild system (Phase 18). This file shows the intended shape.
 
-// Kernel headers — no libc, direct syscall interface
-extern "C" func printk(ptr[void] fmt, ...) -> int32
-extern "C" func register_chrdev(int32 major, ptr[void] name, ptr[void] fops) -> int32
-extern "C" func unregister_chrdev(int32 major, ptr[void] name) -> void
+// ---------------------------------------------------------------------------
+// Kernel C ABI — the symbols a module links against.
+// ---------------------------------------------------------------------------
 
-// C-compatible struct layout for kernel interop
+extern "C" func printk(str fmt, ...) -> int32
+extern "C" func register_chrdev(uint32 major, str name, ptr[FileOperations] fops) -> int32
+extern "C" func unregister_chrdev(uint32 major, str name) -> void
+
+// copy_to_user / copy_from_user return the number of bytes that could NOT be
+// copied (0 on success). Never dereference a user pointer directly.
+extern "C" func copy_to_user(ptr[uint8] to, ptr[uint8] from, uint64 n) -> uint64
+extern "C" func copy_from_user(ptr[uint8] to, ptr[uint8] from, uint64 n) -> uint64
+
+// ---------------------------------------------------------------------------
+// struct file_operations — the kernel's VFS callback table.
+//
+// The real struct has many more fields; @repr("C") plus this field order
+// matches the ABI for the handlers we set. Unused slots stay null, exactly
+// like a C designated initializer that only fills .owner/.read/.write/....
+// ---------------------------------------------------------------------------
+
 @repr("C")
 struct FileOperations {
-    ptr[void] owner
-    ptr[void] read
-    ptr[void] write
-    ptr[void] open
-    ptr[void] release
+    ptr[uint8] owner       // THIS_MODULE
+    ptr[uint8] llseek
+    ptr[uint8] read        // ssize_t (*read)(struct file*, char __user*, size_t, loff_t*)
+    ptr[uint8] write       // ssize_t (*write)(struct file*, const char __user*, size_t, loff_t*)
+    ptr[uint8] read_iter
+    ptr[uint8] write_iter
+    ptr[uint8] iopoll
+    ptr[uint8] iterate_shared
+    ptr[uint8] poll
+    ptr[uint8] unlocked_ioctl
+    ptr[uint8] compat_ioctl
+    ptr[uint8] mmap
+    ptr[uint8] open        // int (*open)(struct inode*, struct file*)
+    ptr[uint8] flush
+    ptr[uint8] release     // int (*release)(struct inode*, struct file*)
 }
 
-const int32 MAJOR_NUM = 240
-const int32 SUCCESS = 0
+// ---------------------------------------------------------------------------
+// Module metadata — the C macros MODULE_LICENSE("GPL") etc. place strings in
+// a dedicated ELF section that modinfo reads. @section models that. A GPL
+// license is required or the kernel taints and hides GPL-only symbols.
+// ---------------------------------------------------------------------------
 
-static bool device_open = false
-static str device_buffer = ""
+@section(".modinfo")
+const str LICENSE = "license=GPL"
+@section(".modinfo")
+const str AUTHOR = "author=Stenopos example"
+@section(".modinfo")
+const str DESCRIPTION = "description=A minimal Stenopos character device"
 
-// Module initialization — called when the module is loaded
-@no_discard
-pub func init_module() -> int32 {
+const uint32 DEVICE_MAJOR = 0            // 0 = ask the kernel to allocate one
+const str DEVICE_NAME = "stenopos_hello"
+const str GREETING = "Hello from a Stenopos kernel module!\n"
+
+static uint32 assigned_major = 0
+
+// ---------------------------------------------------------------------------
+// File operations
+// ---------------------------------------------------------------------------
+
+// read(): copy the greeting to userspace once, then report EOF.
+func device_read(ptr[uint8] file, ptr[uint8] user_buf, uint64 count, ptr[int64] offset) -> int64 {
+    int64 len = cast[int64](GREETING.len())
+
+    // Already delivered the whole message on a previous call -> EOF.
     unsafe {
-        int32 result = register_chrdev(MAJOR_NUM, b"stenopos_dev\0", &FOPS)
+        if (*offset >= len) {
+            return 0
+        }
+    }
+
+    int64 remaining = len
+    if (remaining > cast[int64](count)) {
+        remaining = cast[int64](count)
+    }
+
+    unsafe {
+        ptr[uint8] src = cast[ptr[uint8]](&GREETING)
+        uint64 not_copied = copy_to_user(user_buf, src, cast[uint64](remaining))
+        if (not_copied != 0) {
+            return -14                    // -EFAULT
+        }
+        *offset = *offset + remaining
+    }
+    return remaining
+}
+
+// write(): accept the bytes and log how many we received.
+func device_write(ptr[uint8] file, ptr[uint8] user_buf, uint64 count, ptr[int64] offset) -> int64 {
+    unsafe {
+        printk("stenopos_hello: received %lu bytes from userspace\n", count)
+    }
+    return cast[int64](count)            // pretend we consumed everything
+}
+
+func device_open(ptr[uint8] inode, ptr[uint8] file) -> int32 {
+    unsafe {
+        printk("stenopos_hello: device opened\n")
+    }
+    return 0
+}
+
+func device_release(ptr[uint8] inode, ptr[uint8] file) -> int32 {
+    unsafe {
+        printk("stenopos_hello: device closed\n")
+    }
+    return 0
+}
+
+// The callback table. `&device_read` etc. take the address of each function;
+// unused slots are left null by zeroed().
+static FileOperations FOPS = zeroed()
+
+func init_fops() -> void {
+    FOPS.read = cast[ptr[uint8]](&device_read)
+    FOPS.write = cast[ptr[uint8]](&device_write)
+    FOPS.open = cast[ptr[uint8]](&device_open)
+    FOPS.release = cast[ptr[uint8]](&device_release)
+}
+
+// ---------------------------------------------------------------------------
+// Module lifecycle. In C these are wired up with module_init()/module_exit();
+// @section(".init.text")/(".exit.text") is the equivalent placement.
+// ---------------------------------------------------------------------------
+
+@section(".init.text")
+@no_discard
+pub func stenopos_hello_init() -> int32 {
+    init_fops()
+    unsafe {
+        int32 result = register_chrdev(DEVICE_MAJOR, DEVICE_NAME, &FOPS)
         if (result < 0) {
-            printk(b"stenopos: failed to register device: %d\n\0", result)
+            printk("stenopos_hello: register_chrdev failed: %d\n", result)
             return result
         }
+        assigned_major = cast[uint32](result)
+        printk("stenopos_hello: loaded, major=%d\n", result)
     }
+    return 0
+}
 
+@section(".exit.text")
+pub func stenopos_hello_exit() -> void {
     unsafe {
-        printk(b"stenopos: module loaded, major=%d\n\0", MAJOR_NUM)
-    }
-    return SUCCESS
-}
-
-// Module cleanup — called when the module is unloaded
-pub func cleanup_module() -> void {
-    unsafe {
-        unregister_chrdev(MAJOR_NUM, b"stenopos_dev\0")
-        printk(b"stenopos: module unloaded\n\0")
-    }
-}
-
-// Device open — called when userspace opens /dev/stenopos_dev
-func device_open_handler(ptr[void] inode, ptr[void] file) -> int32 {
-    if (device_open) {
-        return -16  // -EBUSY
-    }
-    device_open = true
-    return SUCCESS
-}
-
-// Device release — called when userspace closes the file descriptor
-func device_release_handler(ptr[void] inode, ptr[void] file) -> int32 {
-    device_open = false
-    return SUCCESS
-}
-
-// Device read — called when userspace reads from /dev/stenopos_dev
-func device_read_handler(ptr[void] file, ptr[void] buf, uint64 count, ptr[void] offset) -> int64 {
-    // Copy data to userspace buffer
-    unsafe {
-        ptr[void] src = &device_buffer
-        int64 bytes = cast[int64](device_buffer.len())
-        if (bytes > cast[int64](count)) {
-            bytes = cast[int64](count)
-        }
-        // copy_to_user would be called here
-        return bytes
-    }
-}
-
-// Device write — called when userspace writes to /dev/stenopos_dev
-func device_write_handler(ptr[void] file, ptr[void] buf, uint64 count, ptr[void] offset) -> int64 {
-    unsafe {
-        // copy_from_user would be called here
-        printk(b"stenopos: received %lu bytes\n\0", count)
-        return cast[int64](count)
+        unregister_chrdev(assigned_major, DEVICE_NAME)
+        printk("stenopos_hello: unloaded\n")
     }
 }

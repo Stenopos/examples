@@ -22,14 +22,14 @@ func fib_iterative(int32 n) -> int32 {
 }
 
 func main() -> int32 {
-    printf("Fibonacci (recursive):\n")
+    println("Fibonacci (recursive):")
     for (i in 0..10) {
-        printf("  fib({i}) = {fib_recursive(i)}\n")
+        println("  fib({i}) = {fib_recursive(i)}")
     }
 
-    printf("Fibonacci (iterative):\n")
+    println("Fibonacci (iterative):")
     for (i in 0..10) {
-        printf("  fib({i}) = {fib_iterative(i)}\n")
+        println("  fib({i}) = {fib_iterative(i)}")
     }
 
     return 0

@@ -1,58 +1,59 @@
 // Classes — inheritance, override, abstract, and visibility modifiers
+// Status: designed
+//
+// Classes are on the roadmap (Phase 9+). This file shows the intended
+// syntax: parent classes with `:` (not `inherits`), methods with an
+// implicit receiver accessed via `this` (no explicit `self` parameter),
+// and `parent.method()` to call up the chain.
 
 class Animal {
-    str name
+    pub str name
     int64 age
 
-    func speak(int64 self) -> void {
+    virtual func speak() -> void {
         println("generic animal sound")
     }
 
-    func describe(int64 self) -> void {
-        println("I am an animal")
+    func describe() -> void {
+        println("I am {this.name}")
     }
 }
 
-class Dog inherits Animal {
+class Dog : Animal {
     str breed
 
-    override func speak(int64 self) -> void {
+    override func speak() -> void {
+        parent.speak()
         println("Woof!")
     }
 
-    func fetch(int64 self) -> void {
+    func fetch() -> void {
         println("Fetching ball...")
     }
 }
 
-class Cat inherits Animal {
+class Cat : Animal {
     bool indoor
 
-    override func speak(int64 self) -> void {
+    override func speak() -> void {
         println("Meow!")
     }
 
-    func purr(int64 self) -> void {
+    func purr() -> void {
         println("Purring...")
     }
 }
 
 abstract class Shape {
-    func area(int64 self) -> float64 {
-        return 0.0
-    }
-
-    func perimeter(int64 self) -> float64 {
-        return 0.0
-    }
+    abstract func area() -> float64
 }
 
-class Rectangle inherits Shape {
+class Rectangle : Shape {
     float64 width
     float64 height
 
-    override func area(int64 self) -> float64 {
-        return 0.0
+    override func area() -> float64 {
+        return this.width * this.height
     }
 }
 
@@ -60,16 +61,16 @@ class Counter {
     int64 count
     pub str name
 
-    pub func increment(int64 self) -> void {
-        println("incrementing")
+    pub func increment() -> void {
+        this.count += 1
     }
 
-    pub func get_count(int64 self) -> int64 {
-        return 0
+    pub func get_count() -> int64 {
+        return this.count
     }
 
-    func reset(int64 self) -> void {
-        println("resetting")
+    func reset() -> void {
+        this.count = 0
     }
 }
 

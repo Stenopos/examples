@@ -9,12 +9,12 @@ const func factorial(int32 n) -> int32 {
 
 func main() -> int32 {
     for (i in 1..10) {
-        printf("{i}! = {factorial(i)}\n")
+        println("{i}! = {factorial(i)}")
     }
 
     // Evaluated at compile time because all args are const
     const int32 F10 = factorial(10)
-    printf("10! at compile time = {F10}\n")
+    println("10! at compile time = {F10}")
 
     return 0
 }

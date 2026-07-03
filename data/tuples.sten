@@ -1,4 +1,5 @@
 // Tuples — tuple creation, return, and destructuring
+// Status: designed
 
 func get_pair() -> (int32, int32) {
     return (10, 20)

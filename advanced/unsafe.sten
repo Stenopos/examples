@@ -1,5 +1,5 @@
 // Example: Unsafe Blocks and Raw Pointers
-// Status: implemented
+// Status: designed
 // Demonstrates: unsafe blocks, ptr[T] type, dereference, pointer arithmetic
 
 import std.io.println
