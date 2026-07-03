@@ -1,15 +1,14 @@
 // Example: Linux Kernel Module — a character device
 // Status: designed
-// Demonstrates: FFI to the kernel C ABI, @repr("C") structs, @section for
+// Demonstrates: the std `kernel` FFI library, @repr("C") structs, @section
 //               module metadata, unsafe, raw pointers
 //
 // A standard, benign loadable kernel module: it creates a character device
 // that returns a fixed greeting when read and logs whatever you write to it.
-// This is the classic "hello world" LKM — the same thing you'd get from a C
-// tutorial, expressed in Stenopos via FFI to the kernel's C interface.
+// This is the classic "hello world" LKM — the same thing a C tutorial builds,
+// written in Stenopos on top of the `kernel` standard-library bindings.
 //
-// It hooks nothing, hides nothing, and touches no other process. Load it,
-// read the device, unload it:
+// It hooks nothing, hides nothing, and touches no other process:
 //
 //   sudo insmod stenopos_hello.ko
 //   sudo mknod /dev/stenopos_hello c $(awk '/stenopos_hello/{print $1}' /proc/devices) 0
@@ -19,52 +18,17 @@
 //   sudo rmmod stenopos_hello
 //
 // NOTE: emitting a real .ko needs freestanding kernel-ABI codegen and the
-// kernel's Kbuild system (Phase 18). This file shows the intended shape.
+// kernel's Kbuild system (roadmap Phase 18). This shows the intended shape.
+
+import kernel.printk.{printk, pr_info}
+import kernel.uaccess.{copy_to_user}
+import kernel.chrdev.{FileOperations, register_chrdev, unregister_chrdev}
+import kernel.errno.{EFAULT}
+import kernel.module.MODULE_OK
 
 // ---------------------------------------------------------------------------
-// Kernel C ABI — the symbols a module links against.
-// ---------------------------------------------------------------------------
-
-extern "C" func printk(str fmt, ...) -> int32
-extern "C" func register_chrdev(uint32 major, str name, ptr[FileOperations] fops) -> int32
-extern "C" func unregister_chrdev(uint32 major, str name) -> void
-
-// copy_to_user / copy_from_user return the number of bytes that could NOT be
-// copied (0 on success). Never dereference a user pointer directly.
-extern "C" func copy_to_user(ptr[uint8] to, ptr[uint8] from, uint64 n) -> uint64
-extern "C" func copy_from_user(ptr[uint8] to, ptr[uint8] from, uint64 n) -> uint64
-
-// ---------------------------------------------------------------------------
-// struct file_operations — the kernel's VFS callback table.
-//
-// The real struct has many more fields; @repr("C") plus this field order
-// matches the ABI for the handlers we set. Unused slots stay null, exactly
-// like a C designated initializer that only fills .owner/.read/.write/....
-// ---------------------------------------------------------------------------
-
-@repr("C")
-struct FileOperations {
-    ptr[uint8] owner       // THIS_MODULE
-    ptr[uint8] llseek
-    ptr[uint8] read        // ssize_t (*read)(struct file*, char __user*, size_t, loff_t*)
-    ptr[uint8] write       // ssize_t (*write)(struct file*, const char __user*, size_t, loff_t*)
-    ptr[uint8] read_iter
-    ptr[uint8] write_iter
-    ptr[uint8] iopoll
-    ptr[uint8] iterate_shared
-    ptr[uint8] poll
-    ptr[uint8] unlocked_ioctl
-    ptr[uint8] compat_ioctl
-    ptr[uint8] mmap
-    ptr[uint8] open        // int (*open)(struct inode*, struct file*)
-    ptr[uint8] flush
-    ptr[uint8] release     // int (*release)(struct inode*, struct file*)
-}
-
-// ---------------------------------------------------------------------------
-// Module metadata — the C macros MODULE_LICENSE("GPL") etc. place strings in
-// a dedicated ELF section that modinfo reads. @section models that. A GPL
-// license is required or the kernel taints and hides GPL-only symbols.
+// Module metadata — modinfo reads these from the .modinfo section. A GPL
+// license is required for full kernel API access.
 // ---------------------------------------------------------------------------
 
 @section(".modinfo")
@@ -104,7 +68,7 @@ func device_read(ptr[uint8] file, ptr[uint8] user_buf, uint64 count, ptr[int64] 
         ptr[uint8] src = cast[ptr[uint8]](&GREETING)
         uint64 not_copied = copy_to_user(user_buf, src, cast[uint64](remaining))
         if (not_copied != 0) {
-            return -14                    // -EFAULT
+            return cast[int64](EFAULT)
         }
         *offset = *offset + remaining
     }
@@ -120,21 +84,16 @@ func device_write(ptr[uint8] file, ptr[uint8] user_buf, uint64 count, ptr[int64]
 }
 
 func device_open(ptr[uint8] inode, ptr[uint8] file) -> int32 {
-    unsafe {
-        printk("stenopos_hello: device opened\n")
-    }
+    pr_info("stenopos_hello: device opened")
     return 0
 }
 
 func device_release(ptr[uint8] inode, ptr[uint8] file) -> int32 {
-    unsafe {
-        printk("stenopos_hello: device closed\n")
-    }
+    pr_info("stenopos_hello: device closed")
     return 0
 }
 
-// The callback table. `&device_read` etc. take the address of each function;
-// unused slots are left null by zeroed().
+// The callback table. Unused slots stay null via zeroed().
 static FileOperations FOPS = zeroed()
 
 func init_fops() -> void {
@@ -145,8 +104,8 @@ func init_fops() -> void {
 }
 
 // ---------------------------------------------------------------------------
-// Module lifecycle. In C these are wired up with module_init()/module_exit();
-// @section(".init.text")/(".exit.text") is the equivalent placement.
+// Module lifecycle. @section(".init.text")/(".exit.text") is the equivalent
+// of C's module_init()/module_exit() placement.
 // ---------------------------------------------------------------------------
 
 @section(".init.text")
@@ -162,13 +121,13 @@ pub func stenopos_hello_init() -> int32 {
         assigned_major = cast[uint32](result)
         printk("stenopos_hello: loaded, major=%d\n", result)
     }
-    return 0
+    return MODULE_OK
 }
 
 @section(".exit.text")
 pub func stenopos_hello_exit() -> void {
     unsafe {
         unregister_chrdev(assigned_major, DEVICE_NAME)
-        printk("stenopos_hello: unloaded\n")
     }
+    pr_info("stenopos_hello: unloaded")
 }
