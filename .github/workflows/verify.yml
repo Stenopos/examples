@@ -32,7 +32,11 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Install LLVM and a C compiler
-        run: sudo apt-get update && sudo apt-get install -y llvm clang
+        run: |
+          sudo apt-get update && sudo apt-get install -y llvm clang
+          # Ensure `llc` is on PATH (Debian/Ubuntu may only ship llc-NN).
+          command -v llc >/dev/null || \
+            sudo ln -sf "$(ls /usr/bin/llc-* /usr/lib/llvm-*/bin/llc 2>/dev/null | head -1)" /usr/local/bin/llc
 
       - name: Download the Stenopos release binary
         env:
@@ -44,14 +48,18 @@ jobs:
           if [ -n "${REQUESTED:-}" ]; then
             TAG="$REQUESTED"
           else
-            TAG="$(gh release view --repo "$REPO" --json tagName -q .tagName)"
+            # All releases are pre-releases during alpha, so `gh release view`
+            # (which resolves the "latest" NON-prerelease) would miss them or
+            # pick a stale one. List releases newest-first and take the top.
+            TAG="$(gh release list --repo "$REPO" --limit 1 --json tagName -q '.[0].tagName')"
           fi
+          [ -n "$TAG" ] || { echo "no release found to verify"; exit 1; }
           echo "Verifying release: $TAG"
           gh release download "$TAG" --repo "$REPO" \
             -p 'stenopos-linux-x86_64' -p 'SHA256SUMS' -D dl
           # Verify the checksum of the binary we downloaded.
           ( cd dl && grep 'stenopos-linux-x86_64' SHA256SUMS | sha256sum -c - )
-          install -m 0755 dl/stenopos-linux-x86_64 /usr/local/bin/stenopos
+          sudo install -m 0755 dl/stenopos-linux-x86_64 /usr/local/bin/stenopos
           echo "TAG=$TAG" >> "$GITHUB_ENV"
 
       - name: Run the verified example suite
