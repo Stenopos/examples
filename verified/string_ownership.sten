@@ -1,0 +1,19 @@
+// Owned strings — return, aliasing, and reassignment (NOVA frees them all).
+// Status: implemented
+func greet(str name) -> str {
+    str g = "Hello, " + name
+    return g
+}
+func main() -> void {
+    str who = "Stenopos"
+    println(greet(who))
+
+    str x = "shared"
+    str y = x
+    println(x)
+    println(y)
+
+    str s = "first"
+    s = "second"
+    println(s)
+}
