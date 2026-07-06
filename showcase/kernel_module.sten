@@ -104,12 +104,12 @@ func init_fops() -> void {
 }
 
 // ---------------------------------------------------------------------------
-// Module lifecycle. @section(".init.text")/(".exit.text") is the equivalent
-// of C's module_init()/module_exit() placement.
+// Module lifecycle. @module_init / @module_exit are the familiar Linux-kernel
+// names; the compiler expands them to the .init.text / .exit.text ELF section
+// placement (equivalent to C's module_init()/module_exit() macros).
 // ---------------------------------------------------------------------------
 
-@section(".init.text")
-@no_discard
+@module_init
 pub func stenopos_hello_init() -> int32 {
     init_fops()
     unsafe {
@@ -124,7 +124,7 @@ pub func stenopos_hello_init() -> int32 {
     return MODULE_OK
 }
 
-@section(".exit.text")
+@module_exit
 pub func stenopos_hello_exit() -> void {
     unsafe {
         unregister_chrdev(assigned_major, DEVICE_NAME)
