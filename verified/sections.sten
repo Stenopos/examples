@@ -1,0 +1,21 @@
+// @section places a function in a named ELF section. @module_init and
+// @module_exit are familiar shorthands (à la the Linux kernel) for the
+// .init.text and .exit.text sections — handy for kernel modules.
+@section(".special.text")
+func in_special() -> int32 {
+    return 7
+}
+
+@module_init
+pub func my_init() -> int32 {
+    return 0
+}
+
+@module_exit
+pub func my_exit() -> void {
+    return
+}
+
+func main() -> void {
+    println("special returns {in_special()}")
+}

@@ -1,0 +1,29 @@
+// Structs cross function boundaries by value: a copy is passed in and a copy
+// is returned. Mutating a parameter never affects the caller, and strings
+// owned inside a struct are cloned/moved so nothing double-frees.
+struct Person {
+    str name
+    int32 age
+}
+func birthday(Person p) -> int32 {
+    p.age = p.age + 1      // mutates the local copy only
+    return p.age
+}
+func describe(Person p) -> str {
+    return p.name          // returns a clone of the field
+}
+func make_person(str who, int32 age) -> Person {
+    Person p = Person { name: who, age: age }
+    return p               // moved out to the caller by value
+}
+func main() -> void {
+    Person a = Person { name: "Alice", age: 30 }
+    println("next = {birthday(a)}")
+    println("still = {a.age}")        // unchanged: pass by value
+    println(describe(a))
+    println(a.name)                    // still valid after the call
+
+    Person b = make_person("Bob", 25)
+    println(b.name)
+    println("b.age = {b.age}")
+}
