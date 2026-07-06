@@ -1,0 +1,20 @@
+// List[T] where T is a struct that owns strings (e.g. a token list). push
+// deep-clones a variable element (the source stays valid), get hands back an
+// owned clone, and every element is freed on drop — no leaks.
+struct Token {
+    str text
+    int32 kind
+}
+func main() -> void {
+    List[Token] toks = list_new()
+    toks.push(Token { text: "if", kind: 1 })
+    Token id = Token { text: "foo", kind: 2 }
+    toks.push(id)
+    println("count = {toks.len()}")
+    Token first = toks.get(0)
+    println(first.text)
+    println("{first.kind}")
+    Token second = toks.get(1)
+    println(second.text)
+    println(id.text)
+}

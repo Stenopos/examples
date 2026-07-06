@@ -1,0 +1,19 @@
+func checked_div(int32 a, int32 b) -> int32 {
+    if (b == 0) {
+        throw("division by zero")
+    }
+    return a / b
+}
+func main() -> void {
+    try {
+        int32 r = checked_div(10, 2)
+        println("10/2 = {r}")
+        int32 bad = checked_div(1, 0)
+        println("unreachable = {bad}")
+    } catch (Error e) {
+        println("caught: {e}")
+    } finally {
+        println("cleanup done")
+    }
+    println("after try")
+}

@@ -1,0 +1,23 @@
+enum Shape : int32 {
+    Circle(float64)
+    Rect(float64, float64)
+    Empty
+}
+
+func area(Shape s) -> float64 {
+    match (s) {
+        case Shape.Circle(r): return 3.14159 * r * r
+        case Shape.Rect(w, h): return w * h
+        case Shape.Empty: return 0.0
+    }
+    return 0.0
+}
+
+func main() -> void {
+    Shape c = Shape.Circle(2.0)
+    Shape r = Shape.Rect(3.0, 4.0)
+    Shape e = Shape.Empty
+    println("circle area = {area(c)}")
+    println("rect area = {area(r)}")
+    println("empty area = {area(e)}")
+}

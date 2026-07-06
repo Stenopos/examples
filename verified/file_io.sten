@@ -1,0 +1,12 @@
+// File I/O built-ins: write_file(path, content) -> bool and read_file(path)
+// -> str, backed by the native runtime. Enough for a compiler to read source
+// and emit output.
+func main() -> void {
+    str path = "/tmp/stenopos_fileio_example.txt"
+    bool ok = write_file(path, "Stenopos file IO works")
+    if (ok) {
+        println("wrote file")
+    }
+    str content = read_file(path)
+    println(content)
+}

@@ -1,0 +1,31 @@
+// List[T] — a growable, heap-backed list. Push, index with get
+// (bounds-checked), len, and pass by value. Value-type and `str` elements are
+// supported; the list is freed automatically at scope exit (NOVA), no leaks.
+func sum_list(List[int32] xs) -> int32 {
+    int32 total = 0
+    int64 n = xs.len()
+    int64 i = 0
+    while (i < n) {
+        total += xs.get(i)
+        i += 1
+    }
+    return total
+}
+func main() -> void {
+    List[int32] xs = list_new()
+    xs.push(10)
+    xs.push(20)
+    xs.push(30)
+    println("len = {xs.len()}")
+    println("xs[0] = {xs.get(0)}")
+    println("sum = {sum_list(xs)}")
+
+    // A list of owned strings: push clones, the list frees each on drop.
+    List[str] words = list_new()
+    words.push("hello")
+    str name = "stenopos"
+    words.push(name)
+    println("words = {words.len()}")
+    println(words.get(0))
+    println(words.get(1))
+}

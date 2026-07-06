@@ -1,0 +1,27 @@
+// String operations a lexer needs: len, byte_at, substring, and char literals
+// (which are int32 code points, so they compare directly with byte_at).
+func is_digit(str s, int64 i) -> bool {
+    int32 c = s.byte_at(i)
+    return c >= '0' && c <= '9'
+}
+func main() -> void {
+    str s = "abc123"
+    println("len = {s.len()}")
+    println("first = {s.byte_at(0)}")
+
+    str letters = s.substring(0, 3)
+    str digits_str = s.substring(3, 6)
+    println(letters)
+    println(digits_str)
+
+    int32 digits = 0
+    int64 i = 0
+    while (i < s.len()) {
+        if (is_digit(s, i)) {
+            digits += 1
+        }
+        i += 1
+    }
+    println("digit count = {digits}")
+    println("newline code = {'\n'}")
+}

@@ -1,0 +1,26 @@
+// HashMap[str, V] — a string-keyed hash map (what interners and symbol tables
+// need). insert (overwrites), get, contains, len. Value types and str values;
+// keys and str values are owned and freed at scope exit (NOVA), no leaks.
+func main() -> void {
+    HashMap[str, int32] ages = map_new()
+    ages.insert("alice", 30)
+    ages.insert("bob", 25)
+    ages.insert("alice", 31)          // overwrites
+    println("count = {ages.len()}")
+    int32 a = ages.get("alice")
+    println("alice = {a}")
+    if (ages.contains("bob")) {
+        println("has bob")
+    }
+    if (!ages.contains("carol")) {
+        println("no carol")
+    }
+
+    HashMap[str, str] caps = map_new()
+    caps.insert("france", "paris")
+    str country = "japan"
+    caps.insert(country, "tokyo")     // key is cloned; country stays valid
+    println(caps.get("france"))
+    println(caps.get("japan"))
+    println(country)
+}
