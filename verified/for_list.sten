@@ -1,0 +1,44 @@
+// for over a List[T] — the third for-loop form. The binding is a fresh COPY
+// of each element (identical to `list.get(i)` semantics): heap-owning
+// elements (str, structs with str fields) are deep-cloned in and freed at the
+// end of each iteration — including on break/continue. The limit is the
+// list's length at entry, so don't grow a list while iterating it.
+// `for (i, item in list)` also binds the int32 index.
+struct Word {
+    str text
+    int32 n
+}
+func main() -> void {
+    List[int32] xs = list_new()
+    xs.push(10)
+    xs.push(20)
+    xs.push(30)
+    int32 sum = 0
+    for (v in xs) {
+        sum += v
+    }
+    println("sum = {sum}")
+    List[str] words = list_new()
+    words.push("sten")
+    words.push("opos")
+    for (w in words) {
+        println(w)
+    }
+    for (i, w in words) {
+        println("{i}: {w}")
+    }
+    List[Word] ws = list_new()
+    ws.push(Word { text: "alpha", n: 1 })
+    ws.push(Word { text: "beta", n: 2 })
+    for (rec in ws) {
+        println("{rec.text} -> {rec.n}")
+    }
+    // break/continue still free the binding
+    for (w in words) {
+        if (w == "sten") {
+            continue
+        }
+        println("kept {w}")
+        break
+    }
+}

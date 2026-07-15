@@ -1,0 +1,15 @@
+// fail(msg) — the hard-failure built-in: print the message to stderr and
+// exit(1). This is the abort primitive a compiler (or any tool) uses for a
+// fatal diagnostic; there is no unwinding, so nothing after it runs. The
+// self-hosted parser uses it for its parse errors ("stenopos: line N: ...").
+func check(int32 value) -> void {
+    if (value < 0) {
+        fail("value must be non-negative, got {value}")
+    }
+    println("ok: {value}")
+}
+func main() -> void {
+    check(3)
+    fail("done checking — bailing out")
+    println("never printed")
+}

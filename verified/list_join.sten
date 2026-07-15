@@ -1,0 +1,38 @@
+// List[str].join() — flatten a list of strings into one, in a single O(total)
+// pass. This is what lets a program accumulate output as chunks (each push is
+// amortized O(1)) and stitch them together once at the end, instead of the
+// O(n^2) of `s = s + chunk` (which re-copies the whole growing buffer every
+// time). The result is a fresh owned string, freed automatically by NOVA.
+func build_csv(List[str] fields) -> str {
+    List[str] parts = list_new()
+    int64 n = fields.len()
+    int64 i = 0
+    while (i < n) {
+        if (i > 0) {
+            parts.push(",")
+        }
+        parts.push(fields.get(i))
+        i += 1
+    }
+    return parts.join()
+}
+func main() -> void {
+    List[str] words = list_new()
+    words.push("Hello")
+    words.push(", ")
+    words.push("Stenopos")
+    words.push("!")
+    str greeting = words.join()
+    println(greeting)
+    println("length = {greeting.len()}")
+
+    List[str] cols = list_new()
+    cols.push("id")
+    cols.push("name")
+    cols.push("email")
+    println(build_csv(cols))
+
+    // Joining an empty list yields an empty string.
+    List[str] none = list_new()
+    println("empty join = '{none.join()}'")
+}
