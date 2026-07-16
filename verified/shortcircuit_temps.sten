@@ -1,0 +1,30 @@
+// Owned string temporaries inside SHORT-CIRCUIT branches — two regression
+// shapes that once emitted IR llc rejected ("Instruction does not dominate
+// all uses"): a method call whose argument is a `.get` clone in a `||` RHS,
+// and a str-returning method compared in the RHS. Temps created in the
+// conditionally-executed block are now freed inside it, before the merge.
+// Also: conditional self-substring (`s = s.substring(...)` in a nested if).
+struct Namer {
+    str prefix
+    func tag(str s) -> str {
+        return this.prefix + s
+    }
+}
+func main() -> int32 {
+    Namer n = Namer { prefix: "k-" }
+    bool skip = false
+    if (skip || n.tag("x") == "k-x") {
+        println("match")
+    }
+    List[str] xs = list_new()
+    xs.push("hello.world")
+    str s = xs.get(0)
+    int32 flag = 1
+    if (flag == 1) {
+        if (s.len() > 5) {
+            s = s.substring(0, 5)
+        }
+    }
+    println(s)
+    return 0
+}

@@ -1,0 +1,16 @@
+// String interpolation as a VALUE — bound to a variable, returned, passed as
+// an argument (not just printed). Produces a fresh owned string.
+func greeting(str who, int32 n) -> str {
+    return "hello {who}, you have {n} messages"
+}
+func main() -> void {
+    str name = "stenopos"
+    str s = "hi {name}"
+    println(s)
+    str g = greeting(name, 3)
+    println(g)
+    float64 pi = 3.14
+    str f = "pi is about {pi}"
+    println(f)
+    println(greeting("world", 0).len())
+}
