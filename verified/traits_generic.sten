@@ -1,0 +1,52 @@
+// Trait bounds on a generic parameter: `T: Describable` lets a generic function
+// call the trait's methods on a value of type T. Each call is monomorphized and
+// dispatched to the concrete type's impl — no runtime cost, no vtable.
+
+trait Describable {
+    func name() -> str
+}
+
+struct Dog { str sound }
+struct Cat { int32 lives }
+
+// Apple and Banana have an IDENTICAL field layout ({str}). Dispatch must still
+// pick the right impl — it resolves by type name, not by IR layout.
+struct Apple { str kind }
+struct Banana { str kind }
+
+impl Describable for Dog {
+    func name() -> str {
+        return "Dog"
+    }
+}
+impl Describable for Cat {
+    func name() -> str {
+        return "Cat"
+    }
+}
+impl Describable for Apple {
+    func name() -> str {
+        return "Apple"
+    }
+}
+impl Describable for Banana {
+    func name() -> str {
+        return "Banana"
+    }
+}
+
+func announce[T: Describable](T x) -> void {
+    println("here is a {x.name()}")
+}
+
+func main() -> void {
+    Dog d = Dog { sound: "woof" }
+    Cat c = Cat { lives: 9 }
+    announce(d)
+    announce(c)
+    // Same-layout structs dispatch correctly.
+    Apple a = Apple { kind: "fuji" }
+    Banana b = Banana { kind: "cavendish" }
+    announce(a)
+    announce(b)
+}

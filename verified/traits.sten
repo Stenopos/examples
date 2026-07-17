@@ -1,0 +1,51 @@
+// Traits: a shared interface with required and default methods, implemented for
+// concrete types with static (monomorphized) dispatch. Inherent `impl` blocks
+// add plain methods to a type without a trait.
+
+trait Describable {
+    // A required method — every impl must provide it.
+    func name() -> str
+    // A default method — impls may override it or inherit this body.
+    func describe() -> str {
+        return "a thing"
+    }
+}
+
+struct Dog {
+    str sound
+}
+
+struct Cat {
+    int32 lives
+}
+
+impl Describable for Dog {
+    func name() -> str {
+        return "Dog"
+    }
+    func describe() -> str {
+        return "a dog that says {this.sound}"
+    }
+}
+
+// Cat provides only the required method; it inherits the default `describe`.
+impl Describable for Cat {
+    func name() -> str {
+        return "Cat"
+    }
+}
+
+// An inherent impl (no trait): plain methods on a type.
+impl Cat {
+    func lives_left() -> int32 {
+        return this.lives
+    }
+}
+
+func main() -> void {
+    Dog d = Dog { sound: "woof" }
+    Cat c = Cat { lives: 9 }
+    println("{d.name()}: {d.describe()}")
+    println("{c.name()}: {c.describe()}")
+    println("lives = {c.lives_left()}")
+}

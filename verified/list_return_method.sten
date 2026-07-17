@@ -1,0 +1,27 @@
+// Calling a method directly on the result of a call that returns a List (an
+// rvalue receiver) works: the temporary is spilled to an addressable slot for
+// the method and then dropped, so the value is correct and nothing leaks.
+
+func nums() -> List[int32] {
+    List[int32] out = list_new()
+    out.push(10)
+    out.push(20)
+    out.push(30)
+    return out
+}
+
+func words() -> List[str] {
+    List[str] out = list_new()
+    out.push("alpha")
+    out.push("beta")
+    return out
+}
+
+func main() -> void {
+    println("len = {nums().len()}")
+    int32 second = nums().get(1)
+    println("second = {second}")
+    str first = words().get(0)
+    println("first = {first}")
+    println("words = {words().len()}")
+}
