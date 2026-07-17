@@ -1,0 +1,37 @@
+// Dynamic dispatch with `dyn Trait` (trait objects). A `dyn Speak` value is a
+// fat pointer { data, vtable }: it can hold any type that implements Speak, and
+// a method call dispatches at runtime through the vtable — the C++ virtual-call
+// model, but non-intrusive (a plain struct only pays for a vtable when used as
+// `dyn`). The trait object owns its heap-boxed value and frees it (and any
+// owned fields, like the `str` below) at scope exit.
+
+trait Speak {
+    func say() -> str
+}
+
+struct Dog {
+    str sound
+}
+
+struct Robot {
+    int32 id
+}
+
+impl Speak for Dog {
+    func say() -> str {
+        return "woof: {this.sound}"
+    }
+}
+
+impl Speak for Robot {
+    func say() -> str {
+        return "beep {this.id}"
+    }
+}
+
+func main() -> void {
+    dyn Speak a = Dog { sound: "grr" }
+    dyn Speak b = Robot { id: 7 }
+    println(a.say())
+    println(b.say())
+}

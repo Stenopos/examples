@@ -1,0 +1,45 @@
+// Associated types: a trait declares a type (`type Item`) that each impl fills
+// in (`type Item = int32`). Like a C++ member typedef, it is resolved at compile
+// time (zero runtime cost). A trait-bounded generic can name the associated
+// type — `c.first()` returns `T::Item`, resolved to the concrete type per
+// monomorphization.
+
+trait Container {
+    type Item
+    func first() -> Item
+}
+
+struct IntBox {
+    int32 value
+}
+
+struct StrBox {
+    str value
+}
+
+impl Container for IntBox {
+    type Item = int32
+    func first() -> int32 {
+        return this.value
+    }
+}
+
+impl Container for StrBox {
+    type Item = str
+    func first() -> str {
+        return this.value
+    }
+}
+
+func describe[T: Container](T c) -> void {
+    println("first = {c.first()}")
+}
+
+func main() -> void {
+    IntBox a = IntBox { value: 42 }
+    StrBox b = StrBox { value: "hi" }
+    println("direct int = {a.first()}")
+    println("direct str = {b.first()}")
+    describe(a)
+    describe(b)
+}

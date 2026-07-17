@@ -1,0 +1,31 @@
+// A generic impl: `impl[T] Trait for Box[T]` implements a trait for a generic
+// struct, for every element type at once. The impl's methods are monomorphized
+// alongside the struct — once per concrete `Box[...]` used.
+
+trait Show {
+    func show() -> str
+}
+
+struct Box[T] {
+    T value
+}
+
+impl[T] Show for Box[T] {
+    func show() -> str {
+        return "Box holding {this.value}"
+    }
+}
+
+// Works through a trait bound too.
+func describe[U: Show](U x) -> void {
+    println(x.show())
+}
+
+func main() -> void {
+    Box[int32] bi = Box { value: 7 }
+    Box[str] bs = Box { value: "hi" }
+    println(bi.show())
+    println(bs.show())
+    describe(bi)
+    describe(bs)
+}

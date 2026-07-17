@@ -1,0 +1,35 @@
+// Traits can be implemented for primitive types too, not just structs. The
+// receiver `this` is the primitive value itself (by value). This works both on
+// a concrete value and through a trait-bounded generic.
+
+trait Describable {
+    func describe() -> str
+}
+
+impl Describable for int32 {
+    func describe() -> str {
+        return "the int {this}"
+    }
+}
+
+impl Describable for bool {
+    func describe() -> str {
+        if (this) {
+            return "yes"
+        }
+        return "no"
+    }
+}
+
+func announce[T: Describable](T x) -> void {
+    println(x.describe())
+}
+
+func main() -> void {
+    int32 n = 42
+    bool flag = true
+    println(n.describe())
+    println(flag.describe())
+    announce(n)
+    announce(flag)
+}
