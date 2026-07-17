@@ -1,0 +1,46 @@
+// Generic functions over `List[T]`. The type parameter is inferred from the
+// list's element type at the call site, and the compiler monomorphizes a copy
+// per concrete element type — so the same `first`/`last`/`doubled` work for
+// List[int32] and List[str], and str elements are cloned/freed correctly.
+
+func first[T](List[T] xs) -> T {
+    return xs.get(0)
+}
+
+func last[T](List[T] xs) -> T {
+    return xs.get(xs.len() - 1)
+}
+
+// Build a fresh list with every element of `xs` repeated twice.
+func doubled[T](List[T] xs) -> List[T] {
+    List[T] out = list_new()
+    for (x in xs) {
+        out.push(x)
+    }
+    for (x in xs) {
+        out.push(x)
+    }
+    return out
+}
+
+func main() -> void {
+    List[int32] nums = list_new()
+    nums.push(10)
+    nums.push(20)
+    nums.push(30)
+    println("first int = {first(nums)}")
+    println("last int = {last(nums)}")
+    List[int32] dn = doubled(nums)
+    println("doubled len = {dn.len()}")
+
+    List[str] words = list_new()
+    words.push("alpha")
+    words.push("beta")
+    println("first word = {first(words)}")
+    println("last word = {last(words)}")
+
+    List[str] dd = doubled(words)
+    for (w in dd) {
+        println("  {w}")
+    }
+}

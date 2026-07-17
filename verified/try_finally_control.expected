@@ -1,0 +1,8 @@
+closed config handle
+a = 200
+recovering from: missing config
+closed config handle
+b = 500
+released lock
+outer caught: disk full
+done

@@ -1,0 +1,43 @@
+// finally + control flow: a `finally` block runs even when a `return` leaves
+// the try or catch, and a `try`/`finally` with no catch runs its finally and
+// then re-raises so the exception reaches an outer handler (it is not
+// swallowed).
+
+// `return` from inside a try: finally still runs, and the handler is cleaned up
+// so a later throw lands correctly.
+func read_config(bool ok) -> int32 {
+    try {
+        if (ok) {
+            return 200
+        }
+        throw("missing config")
+    } catch (Error e) {
+        println("recovering from: {e}")
+        return 500
+    } finally {
+        println("closed config handle")
+    }
+}
+
+// A try/finally with no catch: finally runs, then the exception propagates.
+func with_cleanup() -> void {
+    try {
+        throw("disk full")
+    } finally {
+        println("released lock")
+    }
+}
+
+func main() -> void {
+    int32 a = read_config(true)
+    println("a = {a}")
+    int32 b = read_config(false)
+    println("b = {b}")
+
+    try {
+        with_cleanup()
+    } catch (Error e) {
+        println("outer caught: {e}")
+    }
+    println("done")
+}
