@@ -1,13 +1,8 @@
-// Example: Contracts and Refinement Types
-// Status: designed
-// Demonstrates: preconditions, postconditions, invariants, refinement types
+// Example: Contracts
+// Status: implemented
+// Demonstrates: @requires preconditions and @ensures postconditions, checked
+// at runtime. Inside @ensures, `result` names the returned value.
 
-import std.io.println
-
-// --- Preconditions and postconditions ---
-
-// @requires — checked at function entry
-// @ensures — checked at function exit
 @requires(n >= 0)
 @ensures(result >= 1)
 func factorial(int32 n) -> int32 {
@@ -17,92 +12,16 @@ func factorial(int32 n) -> int32 {
     return n * factorial(n - 1)
 }
 
-// Multiple contracts
-@requires(index >= 0)
-@requires(index < items.len())
-@ensures(result != "")
-func get_item(str[] items, int32 index) -> str {
-    return items[index]
+// Several @requires may be stacked; each is checked on entry.
+@requires(count > 0)
+@requires(total >= 0)
+@ensures(result >= 0)
+func average(int32 total, int32 count) -> int32 {
+    return total / count
 }
 
-// --- Refinement types ---
-
-// A type that carries a constraint
-type PositiveInt = int32 where self > 0
-type Percentage = float64 where self >= 0.0 && self <= 100.0
-type NonEmptyStr = str where self.len() > 0
-type Port = uint16 where self >= 1 && self <= 65535
-
-func create_server(NonEmptyStr host, Port port) -> void {
-    println("Server at {host}:{port}")
-}
-
-// --- Struct invariants ---
-
-struct BankAccount {
-    str owner
-    float64 balance
-
-    // Invariant — always true after construction and after every method
-    @invariant(this.balance >= 0.0)
-
-    func deposit(float64 amount) -> void {
-        @requires(amount > 0.0)
-        this.balance += amount
-    }
-
-    func withdraw(float64 amount) -> bool {
-        @requires(amount > 0.0)
-        if (amount > this.balance) {
-            return false
-        }
-        this.balance -= amount
-        return true
-    }
-}
-
-// --- Contracts with generics ---
-
-@requires(items.len() > 0)
-func first[T](T[] items) -> T {
-    return items[0]
-}
-
-@requires(items.len() > 0)
-@ensures(result >= items[0])
-func max_value(int32[] items) -> int32 {
-    int32 best = items[0]
-    for (i in 1..<items.len()) {
-        if (items[i] > best) {
-            best = items[i]
-        }
-    }
-    return best
-}
-
-func main() -> int32 {
-    // Contracts checked at runtime (debug) or compile-time (when provable)
-    int32 f = factorial(5)
-    println("5! = {f}")
-
-    // Refinement types enforce constraints at construction
-    PositiveInt count = 42
-    Percentage score = 95.5
-    Port port = 8080
-
-    create_server("localhost", port)
-
-    // Bank account with invariants
-    BankAccount account = BankAccount { owner: "Alice", balance: 100.0 }
-    account.deposit(50.0)
-    println("Balance: {account.balance}")
-
-    bool ok = account.withdraw(30.0)
-    println("Withdrawal ok: {ok}, balance: {account.balance}")
-
-    // Max with contract
-    int32[] nums = [3, 1, 4, 1, 5, 9]
-    println("Max: {max_value(nums)}")
-
-    return 0
+func main() -> void {
+    println("5! = {factorial(5)}")            // 120
+    println("average = {average(90, 4)}")     // 22
+    // factorial(-1) would abort: "precondition failed: n >= 0"
 }

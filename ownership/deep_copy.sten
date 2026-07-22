@@ -1,0 +1,28 @@
+// Example: Deep-copy value semantics
+// Status: implemented
+// Demonstrates: copying a struct, list, or map is a DEEP copy — the copy owns
+// its own heap, so mutating it never affects the original, and each is freed
+// exactly once (no aliasing, no double-free).
+
+struct Inner {
+    str tag
+}
+struct Outer {
+    Inner inner
+    str name
+}
+
+func main() -> void {
+    Outer a = Outer { inner: Inner { tag: "original" }, name: "a" }
+    Outer b = a                 // deep copy
+    b.name = "b"
+    b.inner.tag = "changed"
+    println("a = {a.name} / {a.inner.tag}")     // a still original
+    println("b = {b.name} / {b.inner.tag}")     // b is the mutated copy
+
+    List[str] xs = list_new()
+    xs.push("x")
+    List[str] ys = xs           // deep copy
+    ys.push("y")
+    println("xs has {xs.len()}, ys has {ys.len()}")   // 1, 2
+}

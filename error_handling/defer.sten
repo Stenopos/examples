@@ -1,53 +1,32 @@
 // Example: Defer
-// Status: designed
-// Demonstrates: defer runs cleanup at scope exit in LIFO order, even on early return
-
-import std.io.{println, File}
+// Status: implemented
+// Demonstrates: defer runs cleanup at block exit, LIFO, even on early return,
+// and once per iteration inside a loop (block-scoped).
 
 func lifo_order() -> void {
-    // Deferred calls run last-in, first-out — like unwinding a stack
+    // Deferred calls run last-in, first-out — like unwinding a stack.
     defer println("defer 1: runs last")
     defer println("defer 2: runs second")
     defer println("defer 3: runs first")
 
     println("body runs first")
 }
-// Output order:
-//   body runs first
-//   defer 3: runs first
-//   defer 2: runs second
-//   defer 1: runs last
 
 func early_return_demo(bool flag) -> int32 {
     defer println("always runs before returning")
-
     if (flag) {
         return 0    // defer still fires here
     }
     return 1        // and here
 }
 
-func file_demo(str path) -> void {
-    File f = File.open(path, "r")
-    // Register cleanup immediately after acquiring the resource
-    defer f.close()
-
-    str line = f.read_line()
-    println("First line: {line}")
-    // f.close() is called even if read_line() throws
+func per_iteration() -> void {
+    // Block-scoped: the defer fires at the end of EACH iteration.
+    for (i in 0..2) {
+        defer println("  close {i}")
+        println("  open {i}")
+    }
 }
-
-func lock_demo() -> void {
-    // Idiomatic pattern: acquire then immediately defer the release
-    acquire_lock()
-    defer release_lock()
-
-    // Critical section — lock is always released at scope end
-    println("Inside critical section")
-}
-
-func acquire_lock() -> void { println("lock acquired") }
-func release_lock() -> void { println("lock released") }
 
 func main() -> void {
     println("--- LIFO order ---")
@@ -55,8 +34,8 @@ func main() -> void {
 
     println("--- Early return ---")
     int32 r = early_return_demo(true)
-    println("Got {r}")
+    println("got {r}")
 
-    println("--- Lock pattern ---")
-    lock_demo()
+    println("--- Per-iteration cleanup ---")
+    per_iteration()
 }
