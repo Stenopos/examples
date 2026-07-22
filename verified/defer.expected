@@ -1,0 +1,14 @@
+LIFO order:
+early return:
+  cleanup runs before the function returns
+  returned 1
+per-iteration cleanup:
+  open 0
+  close 0
+  open 1
+  close 1
+  open 2
+  close 2
+end of body
+  registered second, runs first
+  main defer (runs last)

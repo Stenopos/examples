@@ -1,0 +1,35 @@
+// Contracts: `@requires` states a precondition, `@ensures` a postcondition.
+// Both are boolean expressions over the function's parameters; `@ensures` also
+// sees the returned value as `result`. They are checked at runtime — a violated
+// contract prints which one failed and exits(1), so a broken assumption stops
+// the program at the boundary that stated it instead of corrupting what follows.
+@requires(n >= 0)
+@ensures(result >= 1)
+func factorial(int32 n) -> int32 {
+    if (n <= 1) {
+        return 1
+    }
+    return n * factorial(n - 1)
+}
+
+// Several `@requires` may be stacked; each is checked in order on entry.
+@requires(count > 0)
+@requires(total >= 0)
+@ensures(result >= 0)
+func average(int32 total, int32 count) -> int32 {
+    return total / count
+}
+
+// Contracts work on `str` results too — `result` borrows the returned value.
+@requires(name.len() > 0)
+@ensures(result.len() > 0)
+func greeting(str name) -> str {
+    return "Hello, " + name + "!"
+}
+
+func main() -> void {
+    println("5! = {factorial(5)}")               // 120
+    println("0! = {factorial(0)}")               // 1
+    println("average = {average(90, 4)}")        // 22
+    println(greeting("Stenopos"))                 // Hello, Stenopos!
+}

@@ -1,0 +1,35 @@
+// Value semantics: copying an aggregate is a DEEP copy. Assigning one struct,
+// list, or map to another duplicates the heap it owns, so the two never share
+// buffers — modifying the copy never affects the original, and each is freed
+// exactly once at scope exit (no double-free, no leak).
+
+struct Inner {
+    str tag
+}
+struct Outer {
+    Inner inner
+    str name
+}
+
+func main() -> void {
+    // Struct copy — including a nested struct and its `str` fields.
+    Outer a = Outer { inner: Inner { tag: "original" }, name: "a" }
+    Outer b = a                 // deep copy
+    b.name = "b"
+    b.inner.tag = "changed"
+    println("a = {a.name} / {a.inner.tag}")     // a still original
+    println("b = {b.name} / {b.inner.tag}")     // b is the mutated copy
+
+    // List copy — the elements are duplicated, not aliased.
+    List[str] xs = list_new()
+    xs.push("x")
+    List[str] ys = xs           // deep copy
+    ys.push("y")
+    println("xs has {xs.len()}, ys has {ys.len()}")   // 1, 2
+
+    // Reassignment (`=` onto an existing owner) frees the old value and takes
+    // an independent copy of the new one — still exactly one owner each.
+    Outer c = Outer { inner: Inner { tag: "temp" }, name: "c" }
+    c = a
+    println("c = {c.name} / {c.inner.tag}")     // a's values, independently owned
+}

@@ -1,0 +1,32 @@
+// `defer` schedules an expression to run when its enclosing block exits — by
+// any path: falling off the end, an early `return`, a `break`/`continue`, or a
+// `throw`. Deferred expressions run in reverse order (last-in, first-out), and
+// they run BEFORE the block's locals are freed, so cleanup can still use them.
+// Stenopos's `defer` is block-scoped: a `defer` inside a loop body fires at the
+// end of each iteration, not all at once when the function returns.
+
+func with_early_return(bool bail) -> int32 {
+    defer println("  cleanup runs before the function returns")
+    if (bail) {
+        return 1
+    }
+    return 0
+}
+
+func main() -> void {
+    println("LIFO order:")
+    defer println("  main defer (runs last)")
+    defer println("  registered second, runs first")
+
+    println("early return:")
+    int32 r = with_early_return(true)
+    println("  returned {r}")
+
+    println("per-iteration cleanup:")
+    for (i in 0..2) {
+        defer println("  close {i}")
+        println("  open {i}")
+    }
+
+    println("end of body")
+}

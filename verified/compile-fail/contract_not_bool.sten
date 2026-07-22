@@ -1,0 +1,8 @@
+// A contract is a boolean expression — anything else is a compile-time error.
+@requires(n)
+func f(int32 n) -> int32 {
+    return n
+}
+func main() -> void {
+    println("{f(1)}")
+}

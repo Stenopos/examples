@@ -1,0 +1,39 @@
+// Integer overflow is checked by default (S8). Every `+`, `-`, and `*` on an
+// integer verifies its result fits the type; if it doesn't, the program aborts
+// with a diagnostic instead of silently wrapping to a wrong (and often
+// exploitable) value. Ordinary arithmetic that stays in range is unaffected.
+//
+// When wrapping is what you actually want — hashes, checksums, ring buffers —
+// `wrapping_add`/`wrapping_sub`/`wrapping_mul` opt out explicitly.
+
+// FNV-1a: a hash is *defined* in terms of modular (wrapping) arithmetic, so it
+// uses the wrapping built-ins. This is correct, not a workaround.
+func fnv1a(str s) -> uint32 {
+    uint32 hash = 2166136261
+    int64 i = 0
+    while (i < s.len()) {
+        uint32 byte = cast[uint32](s.byte_at(i))
+        hash = wrapping_mul(hash, 16777619)
+        hash = wrapping_add(hash, byte)
+        i += 1
+    }
+    return hash
+}
+
+func main() -> void {
+    // Checked arithmetic in range: nothing changes.
+    int32 a = 40000
+    int32 b = 50000
+    println("40000 + 50000 = {a + b}")           // 90000
+
+    // Wrapping arithmetic where it belongs.
+    uint32 h = fnv1a("stenopos")
+    println("fnv1a(stenopos) = {h}")
+
+    // Now overflow a 32-bit multiply on purpose. Silently this would be
+    // 1410065408; instead the program stops here.
+    int32 big = 100000
+    println("about to overflow int32...")
+    int32 boom = big * big
+    println("this line never runs: {boom}")
+}

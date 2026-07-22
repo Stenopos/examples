@@ -1,0 +1,4 @@
+a = a / original
+b = b / changed
+xs has 1, ys has 2
+c = a / original

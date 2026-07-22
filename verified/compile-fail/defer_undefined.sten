@@ -1,0 +1,9 @@
+// A deferred expression is still type-checked — referencing an undefined
+// variable is a compile error, not a silently-ignored statement.
+func main() -> void {
+    defer cleanup(handle)
+    println("body")
+}
+func cleanup(int32 h) -> void {
+    println("cleanup {h}")
+}
