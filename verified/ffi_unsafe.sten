@@ -1,0 +1,29 @@
+// FFI and raw pointers — the escape hatch. Stenopos is memory-safe by default,
+// but a systems language must sometimes call C or touch raw memory. Those
+// operations are confined to `unsafe { }` blocks, so the boundary is explicit:
+// everything outside `unsafe` still carries the full safety guarantee.
+
+// Declare C functions to link against. No bodies — the C library provides them.
+extern "C" {
+    func abs(int32 n) -> int32
+    func labs(int64 n) -> int64
+}
+
+func main() -> void {
+    // Raw pointers: take an address, read and write through it. `&x` is safe;
+    // dereferencing the raw pointer is not, so it lives in `unsafe`.
+    int32 x = 41
+    unsafe {
+        ptr[int32] p = &x
+        int32 read = *p            // read through the pointer
+        println("read via pointer: {read}")
+        *p = read + 1              // write through the pointer
+    }
+    println("x is now: {x}")       // 42
+
+    // Calling an `extern "C"` function also crosses the boundary.
+    unsafe {
+        println("abs(-7) = {abs(0 - 7)}")
+        println("labs(-9) = {labs(0 - 9)}")
+    }
+}

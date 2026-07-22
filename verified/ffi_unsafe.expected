@@ -1,0 +1,4 @@
+read via pointer: 41
+x is now: 42
+abs(-7) = 7
+labs(-9) = 9

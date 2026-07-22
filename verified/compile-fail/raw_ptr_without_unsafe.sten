@@ -1,0 +1,8 @@
+// Dereferencing a raw pointer outside an `unsafe` block is a compile error —
+// the whole point of the escape hatch is that it is explicit.
+func main() -> void {
+    int32 x = 5
+    ptr[int32] p = &x
+    int32 v = *p
+    println("{v}")
+}
