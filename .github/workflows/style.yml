@@ -1,0 +1,40 @@
+name: Style (fmt + lint)
+
+# Keep every Stenopos source in this repo formatted and lint-clean, checked with a
+# real released `stenopos` binary. Runs on every push and PR so drift is caught
+# immediately (unlike the release-triggered verify workflow). No LLVM needed —
+# `stenopos fmt` and `stenopos lint` are front-end only.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  style:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download the latest Stenopos release binary
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          REPO="Stenopos/Syntagma"
+          TAG="$(gh release list --repo "$REPO" --limit 1 --json tagName -q '.[0].tagName')"
+          [ -n "$TAG" ] || { echo "no release found"; exit 1; }
+          echo "Using release: $TAG"
+          gh release download "$TAG" --repo "$REPO" \
+            -p 'stenopos-linux-x86_64' -p 'SHA256SUMS' -D dl
+          ( cd dl && grep 'stenopos-linux-x86_64' SHA256SUMS | sha256sum -c - )
+          sudo install -m 0755 dl/stenopos-linux-x86_64 /usr/local/bin/stenopos
+
+      - name: Check formatting and lints
+        run: |
+          chmod +x check-style.sh
+          STENOPOS=stenopos ./check-style.sh

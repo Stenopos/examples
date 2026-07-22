@@ -69,8 +69,8 @@ func route(str path) -> str {
 
 func http_response(int32 status, str body) -> str {
     return "HTTP/1.1 {status} OK\r\n" \
-           "Content-Length: {body.len()}\r\n" \
-           "Content-Type: text/plain\r\n" \
-           "\r\n" \
-           "{body}"
+    "Content-Length: {body.len()}\r\n" \
+    "Content-Type: text/plain\r\n" \
+    "\r\n" \
+    "{body}"
 }

@@ -13,9 +13,9 @@ struct Config {
 
 // Many Flights can read at once; only one can write
 rwlock[Config] config = rwlock(Config {
-    host: "localhost",
-    port: 8080,
-    debug: false
+        host: "localhost",
+        port: 8080,
+        debug: false
 })
 
 func reader_flight(int32 id) -> void {

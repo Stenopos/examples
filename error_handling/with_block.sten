@@ -26,7 +26,7 @@ func write_file(str path, str data) -> void {
 func nested_resources() -> void {
     // Multiple with bindings in one block (opened left to right, closed right to left)
     with (File src = File.open("input.txt", "r"),
-          File dst = File.open("output.txt", "w")) {
+        File dst = File.open("output.txt", "w")) {
         str line = src.read_line()
         dst.write(line.to_upper())
     }
