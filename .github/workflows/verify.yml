@@ -55,11 +55,17 @@ jobs:
           fi
           [ -n "$TAG" ] || { echo "no release found to verify"; exit 1; }
           echo "Verifying release: $TAG"
+          # The shipped compiler is the self-hosted one, which links every
+          # program against the native runtime (stenopos_runtime.c) at build time.
+          # So download the runtime + installer too, not just the binary, and let
+          # install.sh set them up (binary -> /usr/local/bin, runtime + prebuilt
+          # object -> /usr/local/lib/stenopos) the same way a user would.
           gh release download "$TAG" --repo "$REPO" \
-            -p 'stenopos-linux-x86_64' -p 'SHA256SUMS' -D dl
-          # Verify the checksum of the binary we downloaded.
-          ( cd dl && grep 'stenopos-linux-x86_64' SHA256SUMS | sha256sum -c - )
-          sudo install -m 0755 dl/stenopos-linux-x86_64 /usr/local/bin/stenopos
+            -p 'stenopos-linux-x86_64' -p 'stenopos_runtime.c' -p 'install.sh' \
+            -p 'SHA256SUMS' -D dl
+          # Verify the checksums of what we downloaded.
+          ( cd dl && grep -E 'stenopos-linux-x86_64|stenopos_runtime\.c|install\.sh' SHA256SUMS | sha256sum -c - )
+          sudo bash dl/install.sh /usr/local
           echo "TAG=$TAG" >> "$GITHUB_ENV"
 
       - name: Run the verified example suite
