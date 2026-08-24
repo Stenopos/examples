@@ -37,6 +37,15 @@ for f in "${files[@]}"; do
   case "$f" in
     */compile-fail/*) continue ;;
   esac
+  # Only lint files that actually COMPILE. Aspirational "Status: designed"
+  # examples use syntax that isn't implemented yet, so linting them is noise:
+  # the seed's parser-based lint already skips them (its parser rejects the
+  # file), but the self-host's token-based lint would process them and emit
+  # spurious notes. Gating on `check` keeps both compilers consistent.
+  if ! "$STENOPOS" check "$f" >/dev/null 2>&1; then
+    skipped=$((skipped + 1))
+    continue
+  fi
   out="$("$STENOPOS" lint "$f" 2>&1)"
   if grep -q "parse errors" <<<"$out"; then
     skipped=$((skipped + 1))
