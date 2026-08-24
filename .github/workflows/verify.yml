@@ -65,6 +65,9 @@ jobs:
             -p 'SHA256SUMS' -D dl
           # Verify the checksums of what we downloaded.
           ( cd dl && grep -E 'stenopos-linux-x86_64|stenopos_runtime\.c|install\.sh' SHA256SUMS | sha256sum -c - )
+          # gh release download does not preserve the executable bit; install.sh
+          # detects a release layout by the binary being executable, so set it.
+          chmod +x dl/stenopos-linux-x86_64
           sudo bash dl/install.sh /usr/local
           echo "TAG=$TAG" >> "$GITHUB_ENV"
 
