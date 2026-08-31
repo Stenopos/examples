@@ -1,0 +1,33 @@
+// std.hex and std.base64 — encode/decode byte buffers (List[int32], 0..255).
+import std.hex.{hex_encode, hex_decode}
+import std.base64.{base64_encode, base64_decode}
+
+func bytes_of(str s) -> List[int32] {
+    List[int32] b = list_new()
+    int64 i = 0
+    while (i < s.len()) {
+        b.push(s.byte_at(i))
+        i = i + 1
+    }
+    return b
+}
+
+func to_text(List[int32] b) -> str {
+    str out = ""
+    int64 i = 0
+    while (i < b.len()) {
+        int64 lo = cast[int64](b.get(i))
+        out = out + "0123456789abcdef".substring(lo / 16, lo / 16 + 1)
+        i = i + 1
+    }
+    return out
+}
+
+func main() -> void {
+    List[int32] msg = bytes_of("Stenopos")
+    println("hex    = {hex_encode(msg)}")
+    println("base64 = {base64_encode(msg)}")
+    // Round-trips.
+    println("hex decodes back    = {to_text(hex_decode(hex_encode(msg))) == to_text(msg)}")
+    println("base64 decodes back = {to_text(base64_decode(base64_encode(msg))) == to_text(msg)}")
+}

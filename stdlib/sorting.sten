@@ -1,0 +1,23 @@
+// std.sort — value-semantic sorting and binary search.
+// A sort returns a NEW ordered list; the argument is left unchanged.
+import std.sort.{sort_i32, binary_search_i32, is_sorted_i32}
+
+func main() -> void {
+    List[int32] data = list_new()
+    data.push(5)
+    data.push(2)
+    data.push(9)
+    data.push(1)
+    data.push(7)
+
+    List[int32] ordered = sort_i32(data)
+    println("original first = {data.get(0)}")          // unchanged: 5
+    str line = "sorted:"
+    for (v in ordered) {
+        line = line + " {v}"
+    }
+    println(line)
+    println("is_sorted = {is_sorted_i32(ordered)}")
+    println("index of 7 = {binary_search_i32(ordered, 7)}")
+    println("index of 4 = {binary_search_i32(ordered, 4)}")
+}

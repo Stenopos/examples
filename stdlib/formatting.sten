@@ -1,0 +1,11 @@
+// std.fmt — number and string formatting helpers.
+import std.fmt.{to_hex, to_binary, pad_left, zero_pad, with_thousands, repeat_str}
+
+func main() -> void {
+    println("to_hex(255)          = {to_hex(255)}")
+    println("to_binary(5)         = {to_binary(5)}")
+    println("zero_pad(7, 4)       = {zero_pad(7, 4)}")
+    println("pad_left('hi', 5)    = '{pad_left("hi", 5, " ")}'")
+    println("repeat_str('=', 10)  = {repeat_str("=", 10)}")
+    println("with_thousands       = {with_thousands(cast[int64](12345678))}")
+}

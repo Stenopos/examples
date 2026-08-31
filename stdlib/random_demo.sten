@@ -1,0 +1,15 @@
+// std.random — a seeded, deterministic PRNG (state threaded functionally).
+import std.random.{rng_seed, rng_next, rng_range}
+
+func main() -> void {
+    // Same seed -> same sequence (reproducible).
+    int64 s = rng_seed(42)
+    str line = "rolls:"
+    int32 i = 0
+    while (i < 8) {
+        s = rng_next(s)
+        line = line + " {rng_range(s, 1, 7)}"     // a d6 in [1, 7)
+        i = i + 1
+    }
+    println(line)
+}

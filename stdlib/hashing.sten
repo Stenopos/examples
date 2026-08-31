@@ -1,0 +1,10 @@
+// std.hash — non-cryptographic hashes for tables and checksums.
+import std.hash.{fnv1a_32_str, crc32_str, djb2_str}
+
+func main() -> void {
+    println("fnv1a_32('foobar') = {fnv1a_32_str("foobar")}")
+    println("crc32('123456789') = {crc32_str("123456789")}")
+    println("djb2('hello')      = {djb2_str("hello")}")
+    // Same input, same hash — deterministic.
+    println("deterministic      = {fnv1a_32_str("stenopos") == fnv1a_32_str("stenopos")}")
+}
