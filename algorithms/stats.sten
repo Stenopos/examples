@@ -1,0 +1,94 @@
+// Basic descriptive statistics over a hardcoded List[int64] mixing small
+// values and values well past 2^31 (and some negatives). Computes sum, min,
+// max, integer mean, and median (sort a COPY, index the middle) — all in
+// int64 to stress list build/sort/compare/sum at that width.
+func main() -> int32 {
+    List[int64] values = list_new()
+    int64 v0 = 100
+    values.push(v0)
+    int64 v1 = -50
+    values.push(v1)
+    int64 v2 = 3000000000
+    values.push(v2)
+    int64 v3 = 5000000000
+    values.push(v3)
+    int64 v4 = 42
+    values.push(v4)
+    int64 v5 = -999999999
+    values.push(v5)
+    int64 v6 = 9000000000
+    values.push(v6)
+    int64 v7 = 7
+    values.push(v7)
+    int64 v8 = 123456789012
+    values.push(v8)
+    int64 v9 = -3000000000
+    values.push(v9)
+    int64 v10 = 0
+    values.push(v10)
+    int64 v11 = 1
+    values.push(v11)
+    int64 v12 = 8000000000
+    values.push(v12)
+    int64 v13 = -1
+    values.push(v13)
+    int64 v14 = 999999999999
+    values.push(v14)
+    int64 v15 = 2
+    values.push(v15)
+    int64 v16 = 4500000000
+    values.push(v16)
+    int64 v17 = -7000000000
+    values.push(v17)
+    int64 v18 = 6000000000
+    values.push(v18)
+    int64 v19 = 15
+    values.push(v19)
+
+    println("count {values.len()}")
+
+    // Sum
+    int64 sum = 0
+    for (v in values) {
+        sum = sum + v
+    }
+    println("sum {sum}")
+
+    // Min / max via a manual scan (avoid relying on sort semantics twice).
+    int64 lo = values.get(0)
+    int64 hi = values.get(0)
+    int64 n = values.len()
+    int64 idx = 0
+    while (idx < n) {
+        int64 cur = values.get(idx)
+        if (cur < lo) {
+            lo = cur
+        }
+        if (cur > hi) {
+            hi = cur
+        }
+        idx += 1
+    }
+    println("min {lo}")
+    println("max {hi}")
+
+    // Integer mean.
+    int64 mean = sum / n
+    println("mean {mean}")
+
+    // Median: sort a COPY (value-semantics assignment deep-copies), leave
+    // the original list's order untouched, then index the middle.
+    List[int64] sorted = values
+    sorted.sort()
+    int64 mid = n / 2
+    int64 median = sorted.get(mid)
+    println("median {median}")
+
+    // Confirm the original list was not disturbed by sorting the copy.
+    println("original_first {values.get(0)}")
+    println("original_last {values.get(19)}")
+    println("sorted_first {sorted.get(0)}")
+    println("sorted_last {sorted.get(19)}")
+
+    return 0
+}

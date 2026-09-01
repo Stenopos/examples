@@ -1,0 +1,95 @@
+// Small int64 matrix multiply + trace. Entries are large enough (millions
+// times hundreds) that individual products would overflow a checked int32
+// multiply — this only works if the compiler keeps every element genuinely
+// int64 through construction, access, and update. Nested List[List[int64]]
+// isn't supported yet (list elements must be a value type, str, or a
+// struct — see stenopos-semantic/src/body.rs), so each matrix is
+// List[Row64] where Row64 wraps a List[int64].
+struct Row64 {
+    List[int64] cells
+}
+
+func make_row(int64 a, int64 b, int64 c) -> Row64 {
+    List[int64] row = list_new()
+    row.push(a)
+    row.push(b)
+    row.push(c)
+    return Row64 { cells: row }
+}
+
+func main() -> void {
+    List[Row64] a = list_new()
+    a.push(make_row(1000000, 2000000, 3000000))
+    a.push(make_row(4000000, 5000000, 6000000))
+    a.push(make_row(7000000, 8000000, 9000000))
+
+    List[Row64] b = list_new()
+    b.push(make_row(900, 800, 700))
+    b.push(make_row(600, 500, 400))
+    b.push(make_row(300, 200, 100))
+
+    int64 dim = a.len()
+
+    // c = a * b
+    List[Row64] c = list_new()
+    int64 i = 0
+    while (i < dim) {
+        List[int64] row = list_new()
+        int64 j = 0
+        while (j < dim) {
+            int64 sum = 0
+            int64 k = 0
+            while (k < dim) {
+                Row64 a_row = a.get(i)
+                Row64 b_row = b.get(k)
+                int64 term = a_row.cells.get(k) * b_row.cells.get(j)
+                sum += term
+                k += 1
+            }
+            row.push(sum)
+            j += 1
+        }
+        c.push(Row64 { cells: row })
+        i += 1
+    }
+
+    println("C = A * B:")
+    int64 pi = 0
+    while (pi < dim) {
+        Row64 prow = c.get(pi)
+        List[str] cells = list_new()
+        int64 pj = 0
+        while (pj < dim) {
+            if (pj > 0) {
+                cells.push(" ")
+            }
+            int64 cv = prow.cells.get(pj)
+            cells.push("{cv}")
+            pj += 1
+        }
+        println(" [ {cells.join()} ]")
+        pi += 1
+    }
+
+    // Trace: sum of the diagonal.
+    int64 trace = 0
+    int64 d = 0
+    while (d < dim) {
+        Row64 drow = c.get(d)
+        trace += drow.cells.get(d)
+        d += 1
+    }
+    println("trace(C) = {trace}")
+
+    int64 expected_trace = 18900000000
+    println("trace matches hand-computed expectation: {trace == expected_trace}")
+
+    // Mutate one element in place through nested get/set and re-read it,
+    // to stress struct-holding-List update (not just build-then-read).
+    Row64 first_row = c.get(0)
+    List[int64] fc = first_row.cells
+    fc.set(0, fc.get(0) + 1)
+    c.set(0, Row64 { cells: fc })
+    Row64 reread = c.get(0)
+    println("C[0][0] after +1 = {reread.cells.get(0)}")
+}

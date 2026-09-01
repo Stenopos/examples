@@ -1,0 +1,116 @@
+// File-size histogram: bucket a hardcoded list of int64 byte-size
+// measurements (mixing small KB-range values and multi-gigabyte values past
+// 2^31) into a HashMap[str, int64] of bucket-label -> count, using int64
+// division to compute the bucket then building the label string via
+// interpolation (HashMap[int32,...] keys are not supported by this compiler
+// subset, so the bucket index is stringified as the key instead).
+// Also groups the same 20 indices into 4 named groups via a struct that
+// owns a List[int32] (List[List[int32]] itself is also not supported by
+// this compiler subset), and prints each group's size — stressing nested
+// owned collections alongside the int64 map.
+struct Group {
+    List[int32] items
+}
+
+func main() -> int32 {
+    List[int64] sizes = list_new()
+    int64 s0 = 500000
+    sizes.push(s0)
+    int64 s1 = 2500000000
+    sizes.push(s1)
+    int64 s2 = 100
+    sizes.push(s2)
+    int64 s3 = 5000000000
+    sizes.push(s3)
+    int64 s4 = 999999
+    sizes.push(s4)
+    int64 s5 = 3000000000
+    sizes.push(s5)
+    int64 s6 = 42
+    sizes.push(s6)
+    int64 s7 = 7000000000
+    sizes.push(s7)
+    int64 s8 = 123456
+    sizes.push(s8)
+    int64 s9 = 9000000000
+    sizes.push(s9)
+    int64 s10 = 0
+    sizes.push(s10)
+    int64 s11 = 1000000000
+    sizes.push(s11)
+    int64 s12 = 4200000000
+    sizes.push(s12)
+    int64 s13 = 300
+    sizes.push(s13)
+    int64 s14 = 6000000000
+    sizes.push(s14)
+    int64 s15 = 15000
+    sizes.push(s15)
+    int64 s16 = 8000000000
+    sizes.push(s16)
+    int64 s17 = 700000
+    sizes.push(s17)
+    int64 s18 = 2000000000
+    sizes.push(s18)
+    int64 s19 = 999999999
+    sizes.push(s19)
+
+    int64 bucket_span = 1000000000
+
+    HashMap[str, int64] hist = map_new()
+    int64 n = sizes.len()
+    int64 i = 0
+    while (i < n) {
+        int64 size = sizes.get(i)
+        int64 bucket64 = size / bucket_span
+        str bucket_key = "{bucket64}"
+        int64 count = 0
+        if (hist.contains(bucket_key)) {
+            count = hist.get(bucket_key)
+        }
+        int64 next = count + 1
+        hist.insert(bucket_key, next)
+        i += 1
+    }
+
+    List[str] buckets = hist.keys()
+    buckets.sort()
+    int64 total = 0
+    for (b in buckets) {
+        int64 c = hist.get(b)
+        println("bucket {b}: {c}")
+        total = total + c
+    }
+    println("total {total}")
+    println("distinct_buckets {buckets.len()}")
+
+    // Group the 20 indices into 4 groups by (index % 4). List[List[int32]]
+    // is not supported, so each group is a struct owning a List[int32], and
+    // we build a List[Group] instead.
+    List[Group] groups = list_new()
+    int32 g = 0
+    while (g < 4) {
+        List[int32] group = list_new()
+        int32 idx = 0
+        while (idx < 20) {
+            int32 gm = idx % 4
+            if (gm == g) {
+                group.push(idx)
+            }
+            idx += 1
+        }
+        groups.push(Group { items: group })
+        g += 1
+    }
+
+    int64 gi = 0
+    int64 group_count = groups.len()
+    while (gi < group_count) {
+        Group grp = groups.get(gi)
+        println("group {gi} size {grp.items.len()}")
+        gi += 1
+    }
+    println("group_count {group_count}")
+
+    return 0
+}
