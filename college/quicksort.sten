@@ -1,0 +1,47 @@
+// Quicksort — in-place, Lomuto partition. Sorts a List[int32] passed directly
+// (so `.set()`/`.swap` update the caller's list), with a recursive helper.
+
+func swap(List[int32] xs, int32 i, int32 j) -> void {
+    int32 t = xs.get(i)
+    xs.set(i, xs.get(j))
+    xs.set(j, t)
+}
+
+func partition(List[int32] xs, int32 lo, int32 hi) -> int32 {
+    int32 pivot = xs.get(hi)
+    int32 i = lo - 1
+    int32 j = lo
+    while (j < hi) {
+        if (xs.get(j) < pivot) {
+            i = i + 1
+            swap(xs, i, j)
+        }
+        j = j + 1
+    }
+    swap(xs, i + 1, hi)
+    return i + 1
+}
+
+func quicksort(List[int32] xs, int32 lo, int32 hi) -> void {
+    if (lo < hi) {
+        int32 p = partition(xs, lo, hi)
+        quicksort(xs, lo, p - 1)
+        quicksort(xs, p + 1, hi)
+    }
+}
+
+func main() -> void {
+    List[int32] xs = list_new()
+    xs.push(5)
+    xs.push(2)
+    xs.push(9)
+    xs.push(1)
+    xs.push(7)
+    xs.push(3)
+    quicksort(xs, 0, cast[int32](xs.len()) - 1)
+    str line = "sorted:"
+    for (v in xs) {
+        line = line + " {v}"
+    }
+    println(line)
+}

@@ -1,0 +1,65 @@
+// A singly linked list built WITHOUT the List builtin — a classic arena/index
+// representation. Nodes live in two parallel Lists; a node's `next` is the
+// index of the following node (-1 = end). This is how you build linked
+// structures in a language without raw pointers.
+
+struct LinkedList {
+    pub List[int32] values
+    pub List[int32] next
+    pub int32 head
+}
+
+func new_list() -> LinkedList {
+    return LinkedList { values: list_new(), next: list_new(), head: 0 - 1 }
+}
+
+// Prepend a value; returns the new list (value semantics — the arena Lists are
+// rebuilt so the original is untouched).
+func push_front(LinkedList lst, int32 v) -> LinkedList {
+    List[int32] vals = list_new()
+    List[int32] nxt = list_new()
+    for (x in lst.values) {
+        vals.push(x)
+    }
+    for (x in lst.next) {
+        nxt.push(x)
+    }
+    int32 idx = cast[int32](vals.len())
+    vals.push(v)
+    nxt.push(lst.head)
+    return LinkedList { values: vals, next: nxt, head: idx }
+}
+
+func to_string(LinkedList lst) -> str {
+    str out = "["
+    int32 cur = lst.head
+    bool first = true
+    while (cur >= 0) {
+        if (!first) {
+            out = out + " -> "
+        }
+        out = out + "{lst.values.get(cur)}"
+        first = false
+        cur = lst.next.get(cur)
+    }
+    return out + "]"
+}
+
+func length(LinkedList lst) -> int32 {
+    int32 n = 0
+    int32 cur = lst.head
+    while (cur >= 0) {
+        n = n + 1
+        cur = lst.next.get(cur)
+    }
+    return n
+}
+
+func main() -> void {
+    LinkedList lst = new_list()
+    lst = push_front(lst, 3)
+    lst = push_front(lst, 2)
+    lst = push_front(lst, 1)
+    println("list   = {to_string(lst)}")
+    println("length = {length(lst)}")
+}

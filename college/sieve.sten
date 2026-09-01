@@ -1,0 +1,41 @@
+// Sieve of Eratosthenes — find every prime below a limit.
+
+func primes_below(int32 limit) -> List[int32] {
+    // is_composite[i] = true once we cross i off.
+    List[bool] is_composite = list_new()
+    int32 i = 0
+    while (i < limit) {
+        is_composite.push(false)
+        i = i + 1
+    }
+    int32 p = 2
+    while (p * p < limit) {
+        if (!is_composite.get(p)) {
+            int32 m = p * p
+            while (m < limit) {
+                is_composite.set(m, true)
+                m = m + p
+            }
+        }
+        p = p + 1
+    }
+    List[int32] primes = list_new()
+    int32 k = 2
+    while (k < limit) {
+        if (!is_composite.get(k)) {
+            primes.push(k)
+        }
+        k = k + 1
+    }
+    return primes
+}
+
+func main() -> void {
+    List[int32] primes = primes_below(50)
+    str line = "primes < 50:"
+    for (p in primes) {
+        line = line + " {p}"
+    }
+    println(line)
+    println("count = {primes.len()}")
+}

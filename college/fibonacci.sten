@@ -1,0 +1,48 @@
+// Fibonacci — three classic ways: iterative, recursive, and memoized.
+// Uses int64 so the larger terms don't overflow int32.
+
+func fib_iter(int32 n) -> int64 {
+    if (n < 2) {
+        return cast[int64](n)
+    }
+    int64 a = 0
+    int64 b = 1
+    int32 i = 2
+    while (i <= n) {
+        int64 next = a + b
+        a = b
+        b = next
+        i = i + 1
+    }
+    return b
+}
+
+func fib_rec(int32 n) -> int64 {
+    if (n < 2) {
+        return cast[int64](n)
+    }
+    return fib_rec(n - 1) + fib_rec(n - 2)
+}
+
+// Memoized: fill a table bottom-up (a List used as the memo).
+func fib_memo(int32 n) -> int64 {
+    List[int64] memo = list_new()
+    memo.push(0)
+    memo.push(1)
+    int32 i = 2
+    while (i <= n) {
+        memo.push(memo.get(i - 1) + memo.get(i - 2))
+        i = i + 1
+    }
+    return memo.get(n)
+}
+
+func main() -> void {
+    println("n   iter        rec    memo")
+    int32 n = 0
+    while (n <= 10) {
+        println("{n}: {fib_iter(n)} {fib_rec(n)} {fib_memo(n)}")
+        n = n + 1
+    }
+    println("fib(50) = {fib_iter(50)}")   // needs int64
+}

@@ -1,0 +1,82 @@
+// A hash map built by hand — open addressing with linear probing — to show how
+// the built-in HashMap works underneath. Keys are strings, values int32.
+//
+// The table is three fixed-capacity Lists (keys / values / used-slots) passed
+// directly to the operations. Passing a List as an argument lets a function
+// update it in place with `.set()`; the capacity is fixed, so there is no
+// growth/rehash (a production map would grow and rehash when it fills up).
+
+func capacity() -> int32 {
+    return 16
+}
+
+// djb2 hash, folded into [0, capacity()).
+func hash_of(str key) -> int32 {
+    int64 h = 5381
+    int64 n = key.len()
+    int64 i = 0
+    while (i < n) {
+        h = wrapping_add(wrapping_mul(h, 33), cast[int64](key.byte_at(i)))
+        i = i + 1
+    }
+    int64 slot = h % cast[int64](capacity())
+    if (slot < 0) {
+        slot = slot + cast[int64](capacity())
+    }
+    return cast[int32](slot)
+}
+
+// Insert or update: probe forward until an empty slot or the same key.
+func put(List[str] keys, List[int32] vals, List[bool] used, str key, int32 value) -> void {
+    int32 slot = hash_of(key)
+    int32 tries = 0
+    while (tries < capacity()) {
+        if (!used.get(slot) || keys.get(slot) == key) {
+            keys.set(slot, key)
+            vals.set(slot, value)
+            used.set(slot, true)
+            return
+        }
+        slot = (slot + 1) % capacity()
+        tries = tries + 1
+    }
+}
+
+// Look up a key; returns -1 when absent.
+func get(List[str] keys, List[int32] vals, List[bool] used, str key) -> int32 {
+    int32 slot = hash_of(key)
+    int32 tries = 0
+    while (tries < capacity()) {
+        if (used.get(slot) && keys.get(slot) == key) {
+            return vals.get(slot)
+        }
+        if (!used.get(slot)) {
+            return 0 - 1
+        }
+        slot = (slot + 1) % capacity()
+        tries = tries + 1
+    }
+    return 0 - 1
+}
+
+func main() -> void {
+    List[str] keys = list_new()
+    List[int32] vals = list_new()
+    List[bool] used = list_new()
+    int32 i = 0
+    while (i < capacity()) {
+        keys.push("")
+        vals.push(0)
+        used.push(false)
+        i = i + 1
+    }
+
+    put(keys, vals, used, "one", 1)
+    put(keys, vals, used, "two", 2)
+    put(keys, vals, used, "three", 3)
+    put(keys, vals, used, "two", 22)      // update
+    println("one   = {get(keys, vals, used, "one")}")
+    println("two   = {get(keys, vals, used, "two")}")
+    println("three = {get(keys, vals, used, "three")}")
+    println("four  = {get(keys, vals, used, "four")}")   // absent -> -1
+}

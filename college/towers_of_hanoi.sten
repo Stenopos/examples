@@ -1,0 +1,19 @@
+// Towers of Hanoi — the classic recursion exercise. Move `n` disks from the
+// source peg to the destination peg using the auxiliary peg, one at a time,
+// never placing a larger disk on a smaller one.
+
+func hanoi(int32 n, str from, str to, str via) -> int32 {
+    if (n == 0) {
+        return 0
+    }
+    int32 moves = hanoi(n - 1, from, via, to)
+    println("move disk {n} from {from} to {to}")
+    moves = moves + 1
+    moves = moves + hanoi(n - 1, via, to, from)
+    return moves
+}
+
+func main() -> void {
+    int32 total = hanoi(3, "A", "C", "B")
+    println("solved in {total} moves")   // 2^3 - 1 = 7
+}
