@@ -1,0 +1,96 @@
+// A tiny "operating system" you can actually run — a cooperative kernel that
+// schedules a fixed set of tasks round-robin, tracks per-task state, and offers
+// a minimal "syscall" (print). It runs as an ordinary program: there is no real
+// hardware here, but the SHAPE is a real kernel — a process table, a scheduler
+// loop, task states, and a yield-based context switch.
+//
+// For the freestanding, on-the-metal version (MMIO, a boot entry, a UART
+// driver) see `bare_metal.sten`.
+
+// Task states (like a real kernel's task_struct.state), as small ints:
+//   0 = Ready, 1 = Running, 2 = Finished.
+
+// The process table: parallel Lists indexed by PID. `pc` is each task's saved
+// program counter (which step it will run next) — the essence of a context
+// switch is saving and restoring this.
+struct Kernel {
+    pub List[str] names
+    pub List[int32] pc
+    pub List[int32] steps       // how many steps each task runs before exiting
+    pub List[int32] state       // State as int (Ready/Running/Finished)
+}
+
+func boot() -> Kernel {
+    return Kernel { names: list_new(), pc: list_new(), steps: list_new(), state: list_new() }
+}
+
+// spawn_task() adds a task and returns the new kernel (value semantics: the process
+// table is rebuilt so the caller's kernel is replaced, not mutated in place).
+func spawn_task(Kernel k, str name, int32 steps) -> Kernel {
+    List[str] names = list_new()
+    List[int32] pc = list_new()
+    List[int32] st = list_new()
+    List[int32] state = list_new()
+    for (x in k.names) {
+        names.push(x)
+    }
+    for (x in k.pc) {
+        pc.push(x)
+    }
+    for (x in k.steps) {
+        st.push(x)
+    }
+    for (x in k.state) {
+        state.push(x)
+    }
+    names.push(name)
+    pc.push(0)
+    st.push(steps)
+    state.push(0)               // Ready
+    return Kernel { names: names, pc: pc, steps: st, state: state }
+}
+
+// One quantum for one task: run a single step, advance its pc, and finish it
+// when it has used all its steps. Returns true if the task did work this tick.
+func run_quantum(List[str] names, List[int32] pc, List[int32] steps, List[int32] state, int32 pid) -> bool {
+    if (state.get(pid) == 2) {          // Finished
+        return false
+    }
+    int32 step = pc.get(pid)
+    println("  [{names.get(pid)}] tick, step {step}")   // the "syscall": print
+    pc.set(pid, step + 1)
+    if (step + 1 >= steps.get(pid)) {
+        state.set(pid, 2)               // Finished
+        println("  [{names.get(pid)}] exit")
+    }
+    return true
+}
+
+// The scheduler: round-robin over the process table until every task is
+// Finished. This is the kernel's main loop.
+func schedule(Kernel k) -> void {
+    int32 n = cast[int32](k.names.len())
+    bool any = true
+    int32 tick = 0
+    while (any) {
+        any = false
+        int32 pid = 0
+        while (pid < n) {
+            if (run_quantum(k.names, k.pc, k.steps, k.state, pid)) {
+                any = true
+            }
+            pid = pid + 1
+        }
+        tick = tick + 1
+    }
+    println("all tasks finished after {tick} scheduler rounds")
+}
+
+func main() -> void {
+    Kernel k = boot()
+    k = spawn_task(k, "init", 2)
+    k = spawn_task(k, "shell", 3)
+    k = spawn_task(k, "logger", 1)
+    println("kernel: scheduling {k.names.len()} tasks")
+    schedule(k)
+}
