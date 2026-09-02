@@ -1,76 +1,50 @@
 // Example: HTTP Web Server
-// Status: designed
-// Demonstrates: Flights (green threads), channels, taint tracking, effects, FFI
+// Status: WORKING — compiles and runs on the self-hosted Stenopos compiler.
+// Demonstrates: std.net TCP sockets, std.http request/response, capabilities.
+//
+// A real HTTP server in Stenopos, in ~30 lines. Build and run it, then in another
+// terminal:  curl localhost:8080/   |   curl localhost:8080/health
+//
+// The network is a capability: every function that touches a socket declares
+// @cap(Network), so `main`'s use of the network is visible in its type — the
+// compiler will not let a function open a socket without saying so.
 
-import std.io.{println, eprintln}
-import std.net.{TcpListener, TcpStream}
-import std.string.split
+import std.net.{Listener, Conn, listen, accept, recv, send, close, shutdown}
+import std.http.{Request, parse_request, response}
 
-// Effect annotations — the compiler knows this function does network I/O
-@io @network
-func main() -> int32 {
-    TcpListener listener = TcpListener.bind("0.0.0.0", 8080)
-    println("Listening on http://localhost:8080")
-
-    // Accept loop — each connection spawns a Flight (green thread)
-    for (conn in listener.incoming()) {
-        spawn handle_connection(conn)
-    }
-
-    return 0
-}
-
-// Each request runs on its own Flight — lightweight, M:N scheduled
-@io @network
-func handle_connection(TcpStream conn) -> void {
-    str request = conn.read_all()
-    str[] lines = split(request, "\r\n")
-    str request_line = lines[0]
-
-    // Input from the network is automatically tainted
-    @tainted str path = parse_path(request_line)
-
-    // Sanitize before using — compiler enforces this
-    str safe_path = sanitize_path(path)
-
-    str response = route(safe_path)
-    conn.write(response)
-    conn.close()
-}
-
-func parse_path(str request_line) -> @tainted str {
-    str[] parts = split(request_line, " ")
-    return parts[1]
-}
-
-// Sanitizer — removes taint by validating the input
-@sanitizer
-func sanitize_path(@tainted str path) -> str {
-    // Reject path traversal attempts
-    if (path.contains("..")) {
-        return "/"
-    }
-    return path
-}
-
+// Route a request path to a response. Pure string work (no @cap needed): it
+// only builds responses, it does not touch the network itself.
 func route(str path) -> str {
-    match (path) {
-        case "/" {
-            return http_response(200, "Welcome to Stenopos!")
-        }
-        case "/health" {
-            return http_response(200, "OK")
-        }
-        case _ {
-            return http_response(404, "Not Found")
-        }
+    if (path == "/") {
+        return response(200, "Welcome to Stenopos!")
     }
+    if (path == "/health") {
+        return response(200, "OK")
+    }
+    return response(404, "Not Found")
 }
 
-func http_response(int32 status, str body) -> str {
-    return "HTTP/1.1 {status} OK\r\n" \
-    "Content-Length: {body.len()}\r\n" \
-    "Content-Type: text/plain\r\n" \
-    "\r\n" \
-    "{body}"
+@cap(Network)
+func main() -> void {
+    Listener l = listen(8080)
+    if (l.fd < 0) {
+        println("bind failed — is port 8080 already in use?")
+        return
+    }
+    println("Stenopos web server listening on http://localhost:8080")
+
+    // Accept and serve one connection at a time (Ctrl-C to stop). Each: read the
+    // request, route on its path, write the response, close the connection.
+    for (n in 0..1000000) {
+        Conn c = accept(l)
+        if (c.fd < 0) {
+            continue
+        }
+        str raw = recv(c)
+        Request req = parse_request(raw)
+        str resp = route(req.path)
+        discard send(c, resp)
+        discard close(c)
+    }
+    discard shutdown(l)
 }
