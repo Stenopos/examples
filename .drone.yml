@@ -8,19 +8,22 @@ trigger:
     - pull_request
     - tag
 
+image_pull_secrets:
+  - dockerconfig
+
 steps:
   - name: checks
-    image: alpine/git
+    image: gitea.tuxsmash.com/stenopos/ci:latest
     commands:
-      - sh .drone/checks.sh
+      - stenopos-checks
 
   - name: publish
-    image: alpine/git
+    image: gitea.tuxsmash.com/stenopos/ci:latest
     environment:
       GITHUB_TOKEN:
         from_secret: github_token
     commands:
-      - sh .drone/publish.sh Stenopos/examples
+      - stenopos-publish Stenopos/examples
     depends_on:
       - checks
     when:
