@@ -1,0 +1,5 @@
+* text=auto eol=lf
+*.sten linguist-language=Stenopos
+*.png binary
+*.jpg binary
+*.ico binary

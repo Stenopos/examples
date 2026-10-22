@@ -1,0 +1,17 @@
+# Build outputs
+target/
+build/
+dist/
+out/
+*.o
+*.a
+*.so
+*.ll
+*.bc
+
+# Editors and OS
+.vscode/
+.idea/
+*.swp
+*~
+.DS_Store
