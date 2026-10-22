@@ -13,3 +13,18 @@ steps:
     image: alpine/git
     commands:
       - sh .drone/checks.sh
+
+  - name: publish
+    image: alpine/git
+    environment:
+      GITHUB_TOKEN:
+        from_secret: github_token
+    commands:
+      - sh .drone/publish.sh Stenopos/examples
+    depends_on:
+      - checks
+    when:
+      event:
+        - push
+      branch:
+        - main
