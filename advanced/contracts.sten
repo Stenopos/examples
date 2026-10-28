@@ -1,5 +1,4 @@
 // Example: Contracts
-// Status: implemented
 // Demonstrates: @requires preconditions and @ensures postconditions, checked
 // at runtime. Inside @ensures, `result` names the returned value.
 

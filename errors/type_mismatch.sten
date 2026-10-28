@@ -1,6 +1,10 @@
 // This file should fail to compile.
-// Expected error: type mismatch — function declared to return int32 but body returns bool.
+// Expected error: return type mismatch — function declared to return int32 but body returns bool.
 
 func get_number() -> int32 {
     return true   // error: bool is not int32
+}
+
+func main() -> void {
+    println("{get_number()}")
 }

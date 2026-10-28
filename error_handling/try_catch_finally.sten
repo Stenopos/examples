@@ -1,35 +1,39 @@
 // Example: Try / Catch / Finally
-// Status: designed
-// Demonstrates: try block, multiple catch arms by type, finally always runs
+// Demonstrates: try block, catch, finally always runs, rethrowing to an outer
+// handler
+//
+// `throw("message")` raises an error and `catch (Error e)` receives it; `{e}`
+// formats its message. Typed errors with several `catch` arms tried in order
+// (`catch (IOError e)`, `catch (ParseError e)`, ...) and an `e.message` field
+// are part of the 1.0 language, so this example tags each error's message
+// with its kind instead.
 
-import std.io.{println, File}
-import std.errors.{IoError, ParseError, NetworkError, Error}
+import std.convert.{is_int, parse_int}
 
 func parse_number(str s) -> int32 {
-    // throws ParseError if s is not a valid integer
-    return int32.parse(s)
+    if (!is_int(s)) {
+        throw("ParseError: not a number: '{s}'")
+    }
+    return parse_int(s)
 }
 
+@cap(File)
 func read_config(str path) -> str {
-    // throws IoError if the file does not exist
-    File f = File.open(path)
-    return f.read_all()
+    str text = read_file(path)
+    if (text.len() == 0) {
+        throw("IoError: cannot read {path}")
+    }
+    return text.trim()
 }
 
-func demo_multiple_catch() -> void {
+@cap(File)
+func load_port(str path) -> void {
     try {
-        str raw = read_config("/etc/app.conf")
+        str raw = read_config(path)
         int32 port = parse_number(raw)
         println("Port: {port}")
-    } catch (IoError e) {
-        // Specific handler — file not found, permission denied, etc.
-        println("IO problem: {e.message()}")
-    } catch (ParseError e) {
-        // Config contained a non-integer
-        println("Bad value in config: {e.message()}")
     } catch (Error e) {
-        // Catch-all for anything else
-        println("Unexpected error: {e.message()}")
+        println("Config problem: {e}")
     } finally {
         // Runs whether an error was thrown or not
         println("Config load attempt finished")
@@ -38,20 +42,26 @@ func demo_multiple_catch() -> void {
 
 func demo_rethrow() -> void {
     try {
-        parse_number("not-a-number")
-    } catch (ParseError e) {
+        discard parse_number("not-a-number")
+    } catch (Error e) {
         println("Caught, logging, then rethrowing...")
-        throw e
+        throw("{e}")
     }
 }
 
+@cap(File)
 func main() -> void {
-    demo_multiple_catch()
+    // A good config, a missing file, and a config that is not a number
+    discard write_file("/tmp/stenopos-example-port.conf", "8080\n")
+    discard write_file("/tmp/stenopos-example-bad.conf", "eighty\n")
+    load_port("/tmp/stenopos-example-port.conf")
+    load_port("/tmp/stenopos-example-missing.conf")
+    load_port("/tmp/stenopos-example-bad.conf")
 
     // Outer handler catches the rethrown error
     try {
         demo_rethrow()
     } catch (Error e) {
-        println("Outer caught: {e.message()}")
+        println("Outer caught: {e}")
     }
 }

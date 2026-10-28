@@ -1,11 +1,11 @@
 // This file should fail to compile.
-// Expected error: return value of 'add' is not used — use discard or assign to '_'.
+// Expected error: the return value of `add` is unused — use it, assign it, or `discard` it.
 
 func add(int32 a, int32 b) -> int32 {
     return a + b
 }
 
 func main() -> void {
-    // Return value is silently dropped — Stenopos requires explicit discard
+    // Return value is silently dropped — Stenopos requires an explicit discard
     add(1, 2)   // error: non-void return value must be used or discarded
 }

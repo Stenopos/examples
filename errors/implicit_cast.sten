@@ -1,5 +1,5 @@
 // This file should fail to compile.
-// Expected error: implicit numeric conversion not allowed — use cast[int32](x) explicitly.
+// Expected error: no implicit numeric conversions — use cast[int32](x) explicitly.
 
 func main() -> void {
     // Implicit int64 -> int32 is not permitted

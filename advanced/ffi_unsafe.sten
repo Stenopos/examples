@@ -1,5 +1,4 @@
 // Example: FFI and raw pointers
-// Status: implemented
 // FFI and raw pointers — the escape hatch. Stenopos is memory-safe by default,
 // but a systems language must sometimes call C or touch raw memory. Those
 // operations are confined to `unsafe { }` blocks, so the boundary is explicit:

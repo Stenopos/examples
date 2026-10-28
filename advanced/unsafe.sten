@@ -1,16 +1,20 @@
 // Example: Unsafe Blocks and Raw Pointers
-// Status: designed
 // Demonstrates: unsafe blocks, ptr[T] type, dereference, pointer arithmetic
+//
+// Taking an address and reading or writing through it works today (see
+// ffi_unsafe.sten). Heap allocation through raw pointers, pointer
+// arithmetic, `ptr[void]` and `unsafe_cast` are part of the 1.0 language,
+// so this example does not compile yet; see KNOWN_ISSUES.md.
 
-import std.io.println
 import std.mem.{alloc, free}
 
 func demo_raw_pointer() -> void {
     int32 x = 42
-    // Take the address of a stack variable
-    ptr[int32] p = &x
 
     unsafe {
+        // Take the address of a stack variable
+        ptr[int32] p = &x
+
         // Dereference is only allowed inside unsafe
         int32 val = *p
         println("Dereferenced: {val}")
@@ -32,8 +36,7 @@ func demo_heap_pointer() -> void {
         *(buf + 2) = 30
         *(buf + 3) = 40
 
-        int32 i = 0
-        for (i in 0..4) {
+        for (i in 0..<4) {
             int32 v = *(buf + i)
             println("buf[{i}] = {v}")
         }
@@ -44,9 +47,9 @@ func demo_heap_pointer() -> void {
 
 func demo_void_pointer() -> void {
     int64 value = 0xDEADBEEF
-    ptr[void] vp = &value
 
     unsafe {
+        ptr[void] vp = &value
         // Cast void pointer to typed pointer before dereferencing
         ptr[int64] typed = unsafe_cast[ptr[int64]](vp)
         int64 read_back = *typed

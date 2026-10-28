@@ -1,5 +1,4 @@
 // Example: HTTP Web Server
-// Status: WORKING — compiles and runs on the self-hosted Stenopos compiler.
 // Demonstrates: std.net TCP sockets, std.http request/response, capabilities.
 //
 // A real HTTP server in Stenopos, in ~30 lines. Build and run it, then in another

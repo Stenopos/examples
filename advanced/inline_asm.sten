@@ -1,14 +1,23 @@
 // Inline assembly — embedding raw assembly instructions with asm blocks
+//
+// An `asm { }` block emits its instructions verbatim (AT&T syntax, no
+// operands). It bypasses every check the language enforces, so it is only
+// allowed inside `unsafe`. The instructions here are x86-64.
 
 func nop_sled() -> void {
-    asm {
-        "nop"
+    unsafe {
+        asm {
+            "nop"
+            "nop"
+        }
     }
 }
 
 func memory_fence() -> void {
-    asm {
-        "mfence"
+    unsafe {
+        asm {
+            "mfence"
+        }
     }
 }
 

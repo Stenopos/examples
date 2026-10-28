@@ -8,5 +8,10 @@ func main() -> void {
     int32 x = 10
     int32 y = 20
     int32 z = add(x, y)
+    println("{x} + {y} = {z}")
+    println("{y} - {x} = {y - x}")
+    println("{x} * {y} = {x * y}")
+    println("{y} / {x} = {y / x}")
+    println("{y} % 7 = {y % 7}")
     println("Math operations complete")
 }

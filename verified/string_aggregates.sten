@@ -1,5 +1,5 @@
 // Owned strings inside aggregates — NOVA frees struct fields and array
-// elements when their owner goes out of scope. Status: implemented.
+// elements when their owner goes out of scope.
 struct Person {
     str name
     int32 age

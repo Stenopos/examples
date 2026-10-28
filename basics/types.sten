@@ -16,7 +16,13 @@ func main() -> void {
     int32 a = get_int()
     float64 b = get_float()
     bool c = get_bool()
+    int64 big = 5000000000
+    uint32 flags = 0b1010
+    uint64 mask = 0xffff_0000
+    str s = "Stenopos"
 
+    println("int32 = {a}, float64 = {b}, bool = {c}")
+    println("int64 = {big}, uint32 = {flags}, uint64 = {mask}, str = {s}")
     if (c) {
         println("Types demo complete")
     }

@@ -1,48 +1,48 @@
 // Example: Mutex
-// Status: designed
 // Demonstrates: mutex[T] wrapping shared data, scoped locking via with block
-
-import std.concurrency.{spawn, Flight, mutex}
-import std.io.println
+//
+// The mutex owns the data: you reach it only through a guard, inside a
+// `with` block that takes the lock on entry and releases it at the closing
+// brace, on every path out. `g.get()` returns a copy of the protected value
+// and `g.set(v)` replaces it.
 
 struct Counter {
     int64 value
 }
 
-// The mutex owns the data — you can only touch it inside the lock
-mutex[Counter] shared = mutex(Counter { value: 0 })
-
-func safe_increment(int32 times) -> void {
-    int32 i = 0
-    for (i in 0..times) {
+func safe_increment(mutex[Counter] shared, int32 times, semaphore done) -> void {
+    for (i in 0..<times) {
         // with block acquires the lock, releases it at closing brace
-        with (Counter c = shared.lock()) {
+        with (g = shared.guard()) {
+            Counter c = g.get()
             c.value = c.value + 1
+            g.set(c)
         }
     }
+    done.release()
 }
 
-func read_value() -> int64 {
-    // Read-only lock still goes through the mutex
-    with (Counter c = shared.lock()) {
-        return c.value
+func read_value(mutex[Counter] shared) -> int64 {
+    // Reading still goes through the mutex
+    with (g = shared.guard()) {
+        return g.get().value
     }
 }
 
 func main() -> void {
     println("Starting mutex demo")
+    mutex[Counter] shared = mutex(Counter { value: 0 })
+    semaphore done = semaphore(0)
 
-    // Spawn 4 Flights, each incrementing 250 times
-    Flight[] flights = []
-    int32 i = 0
-    for (i in 0..4) {
-        flights.push(spawn safe_increment(250))
+    // Spawn 4 Hemerodromes, each incrementing 250 times
+    for (i in 0..<4) {
+        spawn safe_increment(shared, 250, done)
     }
-    for (f in flights) {
-        f.join()
+    for (i in 0..<4) {
+        done.acquire()
     }
 
-    int64 result = read_value()
+    int64 result = read_value(shared)
     // 4 * 250 = 1000 guaranteed — no lost updates
     println("Final value: {result} (expected 1000)")
 }

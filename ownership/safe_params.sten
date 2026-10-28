@@ -9,5 +9,6 @@ func main() -> void {
     int32 y = 20
     int32 z = add(x, y)
     int32 w = add(x, y)
-    println("i32 params are copyable")
+    println("add(x, y) = {z}, add(x, y) = {w}, x and y are still {x} and {y}")
+    println("int32 params are copyable")
 }

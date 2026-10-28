@@ -1,5 +1,4 @@
 // Example: Defer
-// Status: implemented
 // Demonstrates: defer runs cleanup at block exit, LIFO, even on early return,
 // and once per iteration inside a loop (block-scoped).
 

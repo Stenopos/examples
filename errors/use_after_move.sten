@@ -1,5 +1,10 @@
 // This file should fail to compile.
-// Expected error: use of moved value 'msg' — a string cannot be used after it has been moved.
+// Expected error: use of moved value `msg` — a string cannot be used after it has been moved.
+//
+// Moves are part of the 1.0 language (ADR-0040): a value that owns heap
+// memory moves on assignment, and the old name can no longer be used.
+// Parameters borrow, so passing `msg` to a function does not move it. Today
+// every transfer copies, so this file still compiles; see KNOWN_ISSUES.md.
 
 func consume(str s) -> void {
     println(s)
@@ -7,9 +12,7 @@ func consume(str s) -> void {
 
 func main() -> void {
     str msg = "dangerous"
-    consume(msg)
-    consume(msg)   // error: 'msg' was moved on the previous line
-
-    int32 x = 10
-    x = 20
+    str taken = msg       // msg moves into taken
+    consume(taken)
+    consume(msg)          // error: use of moved value `msg`
 }

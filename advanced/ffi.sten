@@ -1,8 +1,10 @@
 // Example: Foreign Function Interface (FFI)
-// Status: designed
 // Demonstrates: extern "C", calling C libraries, @repr("C"), raw pointers
-
-import std.io.println
+//
+// Today an extern function's parameters and result must all be int32 or all
+// int64 (see ffi_unsafe.sten). Pointers, strings, structs and callbacks
+// across the C boundary are part of the 1.0 language, so this example does
+// not compile yet; see KNOWN_ISSUES.md.
 
 // Declare external C functions
 extern "C" func puts(ptr[uint8] s) -> int32
@@ -32,7 +34,7 @@ func alloc_buffer(uint64 size) -> ptr[uint8] {
     unsafe {
         ptr[uint8] buf = malloc(size)
         if (buf == cast[ptr[uint8]](0)) {
-            panic("allocation failed")
+            fail("allocation failed")
         }
         return buf
     }

@@ -1,5 +1,4 @@
 // Short-circuit && and || — the right side is skipped when the left decides.
-// Status: implemented
 func loud(bool value, str tag) -> bool {
     println("evaluated {tag}")
     return value

@@ -1,9 +1,13 @@
 // Example: Effect Annotations
-// Status: designed
-// Demonstrates: @pure, @io, @network, @filesystem, @unsafe annotations encode side-effect policy
-
-import std.io.{println, File}
-import std.net.TcpStream
+// Demonstrates: @pure, @io and @net effect bounds, and @cap capabilities,
+// which together encode side-effect policy
+//
+// An effect bound is checked transitively: @pure (no effects) < @io (console
+// and file I/O) < @net (network, includes I/O). A bounded function may only
+// perform effects within its level and only call functions whose level is no
+// higher. Unannotated functions are unconstrained. Which resources a
+// function may touch (files, the network, processes) is a separate,
+// orthogonal check: @cap(File), @cap(Network), ...
 
 // @pure: no side effects, no I/O, deterministic — safe to cache, reorder, parallelize
 @pure
@@ -23,37 +27,50 @@ func log_message(str msg) -> void {
     println("[LOG] {msg}")
 }
 
-// @filesystem: reads or writes files on disk
-@filesystem
+// File access is I/O, and it needs the File capability
+@io
+@cap(File)
 func read_config(str path) -> str {
-    with (File f = File.open(path, "r")) {
-        return f.read_all()
-    }
+    return read_file(path)
 }
 
-// @network: opens sockets, makes HTTP requests, DNS lookups, etc.
-@network
-func ping(str host) -> bool {
-    try {
-        TcpStream conn = TcpStream.connect(host, 80)
-        conn.close()
-        return true
-    } catch (Error _e) {
+// @net: opens sockets, makes HTTP requests, DNS lookups, etc.
+@net
+@cap(Network)
+func ping(str host, int32 port) -> bool {
+    // tcp_connect is the network built-in under std.net
+    int32 fd = tcp_connect(host, port)
+    if (fd < 0) {
         return false
     }
+    discard tcp_close(fd)
+    return true
 }
 
-// A function that does everything must declare all effects
-@io @network @filesystem
+// A function that does everything must allow the highest effect it reaches
+// (@net includes @io) and declare every capability it uses
+@net
+@cap(File)
+@cap(Network)
 func startup_check() -> void {
     log_message("Starting up")
-    str cfg = read_config("/etc/app.conf")
-    bool online = ping("example.com")
+    str cfg = read_config("/nonexistent/app.conf")
+    log_message("Config bytes: {cfg.len()}")
+    // Port 1 on the loopback address is closed, so this reports false
+    bool online = ping("127.0.0.1", 1)
     log_message("Online: {online}")
 }
 
-// Effect inference: the compiler can also infer effects automatically
-// and warn when an @pure function secretly calls @io code
+// An @io function cannot reach the network, and a @pure one cannot print:
+//
+// @pure
+// func noisy(int32 x) -> int32 {
+//     println("side effect")     // ERROR: @pure function performs I/O
+//     return x
+// }
+
+@cap(File)
+@cap(Network)
 func main() -> void {
     int32 result = square_sum(3, 4)
     println("3^2 + 4^2 = {result}")

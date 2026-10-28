@@ -1,46 +1,52 @@
 // Example: Semaphore
-// Status: designed
-// Demonstrates: semaphore[N] limiting how many Flights run a critical section at once
+// Demonstrates: a counting semaphore limiting how many Hemerodromes run a
+// critical section at once
+//
+// `semaphore(n)` starts with n permits. `acquire()` blocks until a permit is
+// available, `release()` returns one, and `try_acquire()` takes one only if
+// it can do so without waiting.
 
-import std.concurrency.{spawn, Flight, semaphore}
-import std.io.println
-
-// Only 3 Flights may enter the database pool at once
-semaphore[3] db_pool = semaphore()
-
-func query_database(int32 flight_id) -> void {
-    println("Flight {flight_id}: waiting for DB slot")
-
+func query_database(semaphore db_pool, atomic[int32] active, atomic[int32] peak, semaphore done) -> void {
     // acquire() blocks until a permit is available
     db_pool.acquire()
 
-    println("Flight {flight_id}: executing query")
+    int32 now = active.fetch_add(1) + 1
+    // record the highest number of queries running at once
+    int32 seen = peak.load()
+    while (now > seen && !peak.compare_exchange(seen, now)) {
+        seen = peak.load()
+    }
     // ... do database work here ...
+    discard active.fetch_sub(1)
 
     // release() returns the permit for the next waiter
     db_pool.release()
-    println("Flight {flight_id}: released DB slot")
-}
-
-func with_block_variant(int32 flight_id) -> void {
-    // with block: acquire on entry, release on exit — even if an error is thrown
-    with (db_pool.permit()) {
-        println("Flight {flight_id}: inside permit block")
-    }
+    done.release()
 }
 
 func main() -> void {
     println("--- Semaphore demo: max 3 concurrent DB connections ---")
 
-    // 8 Flights competing for 3 slots
-    Flight[] flights = []
-    int32 i = 0
-    for (i in 0..8) {
-        flights.push(spawn query_database(i))
-    }
-    for (f in flights) {
-        f.join()
-    }
+    // Only 3 Hemerodromes may enter the database pool at once
+    semaphore db_pool = semaphore(3)
+    atomic[int32] active = atomic(0)
+    atomic[int32] peak = atomic(0)
+    semaphore done = semaphore(0)
 
-    println("All queries complete")
+    // 8 Hemerodromes competing for 3 slots
+    for (i in 0..<8) {
+        spawn query_database(db_pool, active, peak, done)
+    }
+    for (i in 0..<8) {
+        done.acquire()
+    }
+    bool within_limit = peak.load() <= 3
+    println("All queries complete; never more than 3 at once: {within_limit}")
+
+    // try_acquire never blocks
+    semaphore single = semaphore(1)
+    println("first try_acquire: {single.try_acquire()}")
+    println("second try_acquire: {single.try_acquire()}")
+    single.release()
+    println("after release: {single.try_acquire()}")
 }

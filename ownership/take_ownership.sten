@@ -1,4 +1,9 @@
-// Take ownership — passing a string to a function that takes ownership
+// Passing a string to a function — the parameter borrows it
+//
+// A function parameter borrows its argument: the function reads the value and
+// the caller keeps it, so `msg` is still usable after each call. (Assigning
+// a str to a new variable moves it in the 1.0 language; see
+// errors/use_after_move.sten.)
 
 func take_string(str s) -> void {
     println(s)

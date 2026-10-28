@@ -1,5 +1,4 @@
 // Fixed-size arrays — literals, indexing, mutation, iteration.
-// Status: implemented
 func main() -> void {
     int32[5] nums = [10, 20, 30, 40, 50]
     println("first = {nums[0]}")

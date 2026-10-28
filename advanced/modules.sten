@@ -1,14 +1,19 @@
 // Example: Modules and Imports
-// Status: designed
 // Demonstrates: import syntax, pub visibility, module organization, re-exports
+//
+// Importing names in braces (`import std.math.{sqrt, gcd}`) works today.
+// The other import forms below (one name without braces, a whole module, an
+// alias, re-exports), `protected` members and the project modules it imports
+// are part of the 1.0 language, so this example does not compile yet; see
+// KNOWN_ISSUES.md.
 
 // --- Import styles ---
 
 // Import a single item
-import std.io.println
+import std.math.sqrt
 
 // Import multiple items from the same module
-import std.collections.{HashMap, HashSet, Vec}
+import std.collections.{range, sum_i32}
 
 // Import an entire module (access via module.item)
 import std.math
@@ -88,9 +93,10 @@ func main() -> int32 {
     IoFile f = IoFile.open("data.txt")
 
     // Using collections
-    HashMap[str, int32] counts = HashMap[str, int32]{}
-    counts.set("hello", 1)
-    counts.set("world", 2)
+    HashMap[str, int32] counts = map_new()
+    counts.insert("hello", 1)
+    counts.insert("world", 2)
+    println("1 + ... + 5 = {sum_i32(range(1, 5))}")
 
     println("Version: {VERSION}")
 

@@ -1,12 +1,40 @@
 // Example: String Interpolation
-// Status: designed
 // Demonstrates: {expr} syntax, nested expressions, formatting
+//
+// Inside a string literal, `{ ... }` holds any expression; it is evaluated
+// and formatted in place. `\{` and `\}` write literal braces. Format
+// specifiers such as `{value:x}` and `{pi:.2}`, and the `if (c) a else b`
+// expression, are part of the 1.0 language; std.fmt and small helpers do the
+// same job today.
 
-import std.io.println
+import std.string.{to_upper}
+import std.fmt.{to_hex, to_binary}
+import std.math.{round}
 
 struct Point {
     float64 x
     float64 y
+}
+
+func grade(int32 score) -> str {
+    if (score >= 90) {
+        return "A"
+    } else if (score >= 80) {
+        return "B"
+    }
+    return "C"
+}
+
+func status(int32 score) -> str {
+    if (score >= 70) {
+        return "passing"
+    }
+    return "failing"
+}
+
+// Round to a number of decimal places
+func fixed(float64 x, float64 scale) -> float64 {
+    return round(x * scale) / scale
 }
 
 func main() -> int32 {
@@ -19,9 +47,9 @@ func main() -> int32 {
     int32 b = 20
     println("{a} + {b} = {a + b}")
 
-    // Method calls
+    // Function and method calls
     str text = "hello world"
-    println("Upper: {text.to_upper()}")
+    println("Upper: {to_upper(text)}")
     println("Length: {text.len()}")
 
     // Struct fields
@@ -29,35 +57,35 @@ func main() -> int32 {
     println("Point({p.x}, {p.y})")
 
     // Nested expressions
-    int32[] numbers = [1, 2, 3, 4, 5]
-    println("First: {numbers[0]}, Last: {numbers[numbers.len() - 1]}")
-    println("Count: {numbers.len()}")
+    int32[5] numbers = [1, 2, 3, 4, 5]
+    println("First: {numbers[0]}, Last: {numbers[4]}")
+    println("Sum of first two: {numbers[0] + numbers[1]}")
 
-    // Conditionals in interpolation
+    // Choosing text by a condition
     int32 score = 85
-    println("Grade: {if (score >= 90) "A" else if (score >= 80) "B" else "C"}")
+    println("Grade: {grade(score)}")
 
     // Multi-line strings with interpolation
     str report = "
         Name: {name}
         Score: {score}
-        Status: {if (score >= 70) "passing" else "failing"}
+        Status: {status(score)}
     "
     println(report)
 
-    // Escaped braces — use {{ and }}
-    println("Use {{expr}} for interpolation")
+    // Escaped braces
+    println("Use \{expr\} for interpolation")
 
     // Numbers in different formats
     int32 value = 255
     println("Decimal: {value}")
-    println("Hex: {value:x}")
-    println("Binary: {value:b}")
+    println("Hex: {to_hex(value)}")
+    println("Binary: {to_binary(value)}")
 
     // Float formatting
     float64 pi = 3.14159265
-    println("Pi: {pi:.2}")      // 3.14
-    println("Pi: {pi:.4}")      // 3.1416
+    println("Pi: {fixed(pi, 100.0)}")      // 3.14
+    println("Pi: {fixed(pi, 10000.0)}")    // 3.1416
 
     return 0
 }

@@ -1,8 +1,8 @@
 // Example: Generics
-// Status: designed
-// Demonstrates: generic functions, generic structs, type constraints, [T] syntax
-
-import std.io.println
+// Demonstrates: generic functions, generic structs, trait constraints, [T] syntax
+//
+// Generics are monomorphized: the compiler emits a specialized copy for each
+// concrete type used, inferred from the arguments.
 
 // Generic function — square brackets for type parameters
 func max[T](T a, T b) -> T {
@@ -19,7 +19,7 @@ struct Pair[A, B] {
 }
 
 func swap[A, B](Pair[A, B] p) -> Pair[B, A] {
-    return Pair[B, A] { first: p.second, second: p.first }
+    return Pair { first: p.second, second: p.first }
 }
 
 // Generic with trait constraint
@@ -27,7 +27,17 @@ trait Printable {
     func to_string() -> str
 }
 
-func print_all[T: Printable](T[] items) -> void {
+struct Celsius {
+    float64 degrees
+}
+
+impl Printable for Celsius {
+    func to_string() -> str {
+        return "{this.degrees} C"
+    }
+}
+
+func print_all[T: Printable](List[T] items) -> void {
     for (item in items) {
         println(item.to_string())
     }
@@ -35,7 +45,7 @@ func print_all[T: Printable](T[] items) -> void {
 
 // Generic container
 struct Stack[T] {
-    T[] items
+    List[T] items
 
     func push(T item) -> void {
         this.items.push(item)
@@ -45,14 +55,14 @@ struct Stack[T] {
         if (this.items.len() == 0) {
             return null
         }
-        return this.items.remove_last()
+        return this.items.pop()
     }
 
     func peek() -> T? {
         if (this.items.len() == 0) {
             return null
         }
-        return this.items[this.items.len() - 1]
+        return this.items.last()
     }
 
     func is_empty() -> bool {
@@ -60,37 +70,33 @@ struct Stack[T] {
     }
 }
 
-// Generic function with multiple constraints
-func find_max[T: Comparable + Printable](T[] items) -> T {
-    T best = items[0]
-    for (i in 1..<items.len()) {
-        if (items[i] > best) {
-            best = items[i]
-        }
-    }
-    return best
-}
-
 func main() -> int32 {
     // Generic function calls
-    int32 m = max[int32](10, 20)
+    int32 m = max(10, 20)
     println("Max: {m}")
 
-    float64 f = max[float64](3.14, 2.71)
+    float64 f = max(3.14, 2.71)
     println("Max: {f}")
 
     // Generic struct
-    Pair[str, int32] p = Pair[str, int32] { first: "age", second: 30 }
+    Pair[str, int32] p = Pair { first: "age", second: 30 }
     println("{p.first}: {p.second}")
 
     Pair[int32, str] swapped = swap(p)
     println("{swapped.first}: {swapped.second}")
 
+    // Trait-constrained generic
+    List[Celsius] temps = list_new()
+    temps.push(Celsius { degrees: 21.5 })
+    temps.push(Celsius { degrees: 0.0 })
+    print_all(temps)
+
     // Generic container
-    Stack[int32] s = Stack[int32] { items: [] }
+    Stack[int32] s = Stack { items: list_new() }
     s.push(1)
     s.push(2)
     s.push(3)
+    println("Peek: {s.peek() ?? 0}")
 
     while (!s.is_empty()) {
         int32? val = s.pop()

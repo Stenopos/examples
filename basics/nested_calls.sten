@@ -12,5 +12,7 @@ func quadruple(int32 x) -> int32 {
 func main() -> void {
     int32 n = 5
     int32 result = quadruple(n)
+    println("quadruple({n}) = {result}")
+    println("double(double(double({n}))) = {double(double(double(n)))}")
     println("nested function calls complete")
 }

@@ -1,5 +1,4 @@
 // Match — pattern matching on literal values with a catch-all
-// Status: implemented
 //
 // Stenopos `match` requires either exhaustive coverage or a `case _:` arm.
 // Range patterns (`case 2..10:`) are planned; this example uses literals.

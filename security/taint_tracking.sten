@@ -1,54 +1,62 @@
 // Example: Taint Tracking
-// Status: designed
-// Demonstrates: @tainted marks untrusted data, @sanitizer removes taint, @sink rejects tainted values
+// Demonstrates: @tainted marks untrusted data, @sanitizer removes taint, @sink
+// rejects tainted values
+//
+// Data arriving from outside the program is tainted. The compiler tracks taint
+// through assignments, string interpolation, concatenation and calls. A @sink
+// function refuses tainted arguments — a compile error, not a runtime check.
 
-import std.io.println
-import std.db.Connection
+import std.string.{split, join}
 
-// Data arriving from outside the program is tainted.
-// The compiler tracks taint through assignments and expressions.
-// A @sink function refuses to accept @tainted arguments — compile error if you try.
-
-// Anything returned from network/user input is automatically @tainted
-func read_user_input() -> @tainted str {
+// A source: everything it returns is tainted
+@tainted
+func read_user_input() -> str {
     return "'; DROP TABLE users; --"   // classic SQL injection attempt
+}
+
+// replace: split on the pattern, join with the replacement
+func replace(str s, str from, str to) -> str {
+    return join(split(s, from), to)
 }
 
 // @sanitizer lifts the taint after validation/escaping
 @sanitizer
-func escape_sql(@tainted str raw) -> str {
-    // Replace single quotes and other dangerous characters
-    str clean = raw.replace("'", "''")
-    clean = clean.replace(";", "")
+func escape_sql(str raw) -> str {
+    // Double single quotes and drop statement separators
+    str clean = replace(raw, "'", "''")
+    clean = replace(clean, ";", "")
     return clean
 }
 
-// @sink: the compiler checks that no @tainted value reaches here
+// @sink: the compiler checks that no tainted value reaches here. (A real
+// program would hand the query to a database driver.)
 @sink
-func run_query(Connection db, str sql) -> void {
-    db.execute(sql)
+func run_query(str sql) -> void {
+    println("executing: {sql}")
 }
 
-func safe_flow(Connection db) -> void {
-    @tainted str user_input = read_user_input()
+func safe_flow() -> void {
+    str user_input = read_user_input()
 
-    // Compile error if you pass user_input directly to run_query — it is @tainted
-    // run_query(db, user_input)   // ERROR: tainted value reaches @sink
+    // Compile error if you pass user_input directly to run_query — it is tainted
+    // run_query(user_input)   // ERROR: tainted value passed to @sink
 
     // Sanitize first, then the compiler is happy
     str safe = escape_sql(user_input)
-    run_query(db, "SELECT * FROM users WHERE name = '{safe}'")
+    run_query("SELECT * FROM users WHERE name = '{safe}'")
 }
 
 // Taint propagates through string interpolation
 func taint_propagation() -> void {
-    @tainted str input = read_user_input()
-    @tainted str query = "SELECT * FROM t WHERE x = '{input}'"
-    // query is still @tainted because it was built from @tainted input
-    println("Query is tainted — cannot be passed to a @sink directly")
+    str input = read_user_input()           // tainted: it comes from a source
+    str query = "SELECT * FROM t WHERE x = '{input}'"
+    // query is tainted because it was built from tainted input:
+    // run_query(query)          // ERROR: tainted value passed to @sink
+    println("Query is tainted — cannot be passed to a @sink directly ({query.len()} bytes)")
 }
 
 func main() -> void {
     println("Taint tracking prevents injection at compile time")
+    safe_flow()
     taint_propagation()
 }

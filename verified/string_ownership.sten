@@ -1,5 +1,4 @@
 // Owned strings — return, aliasing, and reassignment (NOVA frees them all).
-// Status: implemented
 func greet(str name) -> str {
     str g = "Hello, " + name
     return g

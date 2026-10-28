@@ -1,5 +1,7 @@
 // Tuples — tuple creation, return, and destructuring
-// Status: designed
+//
+// Tuples are part of the 1.0 language and are not implemented yet; see
+// KNOWN_ISSUES.md.
 
 func get_pair() -> (int32, int32) {
     return (10, 20)

@@ -1,5 +1,4 @@
 // Integer overflow — checked by default
-// Status: implemented
 //
 // Every `+`, `-`, and `*` on an integer is checked. If the result does not fit
 // the type, the program aborts with a diagnostic instead of silently wrapping

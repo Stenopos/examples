@@ -1,22 +1,27 @@
 // Example: Annotations
-// Status: designed
-// Demonstrates: all built-in annotations and their usage
+// Demonstrates: the built-in annotations and their usage
+//
+// Every annotation is checked: an unknown or misplaced one is a compile error,
+// never silently ignored. `@packed`, `@aligned(N)` and `@opaque` are reserved
+// and rejected until C-compatible layouts land, and annotations on struct
+// fields are not supported yet; they are shown in comments below.
 
-import std.io.println
+import std.string.{split, join}
 
 // --- Function annotations ---
 
-// Must use the return value — compiler error if discarded
-@no_discard
+// Return values are must-use by default — a compile error if dropped.
+// @ignore_discard lets callers drop this one.
+@ignore_discard
 func compute(int32 x) -> int32 {
     return x * x + 1
 }
 
-// Function never returns (infinite loops, exit, panic)
+// Function never returns (it may not `return`; reaching its end aborts)
 @no_return
 func fatal_error(str message) -> void {
     eprintln("FATAL: {message}")
-    exit(1)
+    fail(message)
 }
 
 // Hint: inline this function at call sites
@@ -37,30 +42,27 @@ func process_item(int32 item) -> int32 {
     return item * 2
 }
 
-// Mark as deprecated with a message
+func process_v2(int32 x) -> int32 {
+    return x
+}
+
+// Mark as deprecated with a message: callers get a warning
 @deprecated("Use process_v2() instead")
 func process(int32 x) -> int32 {
-    return x
+    return process_v2(x)
 }
 
 // --- Struct annotations ---
 
-// No padding between fields — exact memory layout
-@packed
-struct PackedHeader {
-    uint8 version
-    uint8 flags
-    uint16 length
-    uint32 checksum
-}
+// No padding between fields — exact memory layout (1.0):
+// @packed
+// struct PackedHeader { ... }
 
-// Align struct to N-byte boundary
-@aligned(64)
-struct CacheLine {
-    int64[8] data
-}
+// Align struct to N-byte boundary (1.0):
+// @aligned(64)
+// struct CacheLine { int64[8] data }
 
-// C-compatible memory layout
+// C-compatible memory layout: fields laid out exactly as C does
 @repr("C")
 struct CStruct {
     int32 x
@@ -68,79 +70,84 @@ struct CStruct {
     float64 z
 }
 
-// Opaque type — internals hidden from other modules
-@opaque
-struct Handle {
-    uint64 id
-    ptr[uint8] internal_data
-}
+// Opaque type — internals hidden from other modules (1.0):
+// @opaque
+// struct Handle { ... }
 
 // --- Security annotations ---
 
-// Sensitive data — zeroed on drop, excluded from logs
-@sensitive
 struct Password {
     str value
 }
 
-// Taint tracking
+// Taint tracking: a source, a sanitizer and a sink
 @tainted
 func read_user_input() -> str {
-    return get_input()
+    return "<b>hello</b>"
 }
 
 @sanitizer
 func sanitize_html(str input) -> str {
-    // Remove dangerous characters
-    return input.replace("<", "&lt;").replace(">", "&gt;")
+    // Escape the characters that start and end a tag
+    return join(split(join(split(input, "<"), "&lt;"), ">"), "&gt;")
 }
 
 @sink
-func execute_query(str query) -> void {
+func render(str html) -> void {
     // Compiler ensures only sanitized data reaches here
-    db.execute(query)
+    println("render: {html}")
 }
 
 // --- Test annotation ---
 
+// @test functions are run by `stenopos test` (on a file without `main`) or
+// `tagma test`; a normal build leaves them out
 @test
 func test_compute() -> void {
-    assert(compute(3) == 10)
-    assert(compute(0) == 1)
+    if (compute(3) != 10 || compute(0) != 1) {
+        fail("compute")
+    }
 }
 
 @test
 func test_fast_add() -> void {
-    assert(fast_add(2, 3) == 5)
+    if (fast_add(2, 3) != 5) {
+        fail("fast_add")
+    }
 }
 
 // --- Linker section ---
 
-@section(".init")
+@section(".text.startup")
 func early_init() -> void {
-    // Placed in the .init section of the binary
+    // Placed in the .text.startup section of the binary
 }
 
 func main() -> int32 {
-    // @no_discard — must use the return value
     int32 result = compute(5)
     println("Result: {result}")
+    compute(6)                      // allowed: @ignore_discard
 
     // @inline — transparent to the user
     int32 sum = fast_add(10, 20)
     println("Sum: {sum}")
+    println("Hot: {process_item(21)}")
+    println("Deprecated: {process(7)}")
 
-    // @packed struct — exact size
-    PackedHeader header = PackedHeader {
-        version: 1,
-        flags: 0xFF,
-        length: 1024,
-        checksum: 0xDEADBEEF
+    // @repr("C") struct
+    CStruct c = CStruct { x: 1, y: 2, z: 3.5 }
+    println("CStruct: {c.x} {c.y} {c.z}")
+
+    // @sensitive — the value is wiped when pw goes out of scope
+    @sensitive Password pw = Password { value: "hunter2" }
+
+    // Taint: sanitize before the sink
+    render(sanitize_html(read_user_input()))
+
+    early_init()
+    if (result < 0) {
+        handle_error("negative result")
+        fatal_error("unreachable")
     }
-    println("Header version: {header.version}")
-
-    // @sensitive — value is zeroed when Password goes out of scope
-    Password pw = Password { value: "hunter2" }
-
     return 0
 }

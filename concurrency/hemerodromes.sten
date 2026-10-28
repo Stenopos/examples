@@ -1,0 +1,40 @@
+// Example: Hemerodromes (Green Threads)
+// Demonstrates: spawn, waiting for a group of green threads, M:N scheduling
+//
+// `spawn f(args)` runs f on a Hemerodrome: a lightweight green thread,
+// multiplexed onto a small pool of OS threads. Hemerodromes are cheap to
+// create. There is no join handle; a program waits for its workers with a
+// channel or a semaphore (as here), and every Hemerodrome still running is
+// joined when the program exits.
+
+// Each worker runs on its own Hemerodrome and reports its result on a channel
+func worker(int32 id, chan[int32] results) -> void {
+    // Simulate some work
+    int32 result = id * id
+    results.send(result)
+}
+
+func run_group(int32 count) -> void {
+    // A group of Hemerodromes — all spawned, then all collected
+    chan[int32] results = chan()
+    for (i in 0..<count) {
+        spawn worker(i, results)
+    }
+
+    // Wait for the whole group: one result per worker, in whatever order
+    // they finish; sorting makes the report deterministic
+    List[int32] squares = list_new()
+    for (i in 0..<count) {
+        squares.push(results.recv())
+    }
+    squares.sort()
+    for (i, sq in squares) {
+        println("worker {i} finished with result {sq}")
+    }
+}
+
+func main() -> void {
+    println("Spawning a group of Hemerodromes...")
+    run_group(5)
+    println("All Hemerodromes have finished")
+}

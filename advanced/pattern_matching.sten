@@ -1,8 +1,14 @@
 // Example: Pattern Matching
-// Status: designed
-// Demonstrates: match expressions, enum matching, destructuring, guards, exhaustiveness
-
-import std.io.println
+// Demonstrates: match statements, enum matching, payload binding,
+// exhaustiveness, several patterns sharing a result
+//
+// A `case` uses the colon form: the statements after the `:` run until the
+// next `case`. Patterns are literals (numbers, characters, strings), enum
+// variants — whose payload fields bind as names — or `_` for the catch-all.
+// `match` is a statement, so each case returns or assigns its result.
+// Conditions that need more than a literal (ranges, comparisons, fields of a
+// struct) are written with if/else; range patterns (`case 10..99:`) are part
+// of the 1.0 language.
 
 // --- Enum matching ---
 
@@ -13,40 +19,50 @@ enum Shape : int32 {
 }
 
 func shape_name(Shape s) -> str {
-    return match (s) {
-        case Shape.Circle { "circle" }
-        case Shape.Rectangle { "rectangle" }
-        case Shape.Triangle { "triangle" }
+    match (s) {
+        case Shape.Circle: return "circle"
+        case Shape.Rectangle: return "rectangle"
+        case Shape.Triangle: return "triangle"
     }
+    return "unreachable"
 }
 
 // --- Match with associated data ---
 
-enum Result[T] : int32 {
-    Ok(T) = 0
-    Err(str) = 1
+// Variants can carry a payload. (Generic enums such as Result[T] are part of
+// the 1.0 language, so this one carries an int32.)
+enum IntResult : int32 {
+    Ok(int32)
+    Err(str)
 }
 
-func describe_result(Result[int32] r) -> str {
-    return match (r) {
-        case Result.Ok(value) { "Success: {value}" }
-        case Result.Err(msg) { "Error: {msg}" }
+func describe_result(IntResult r) -> str {
+    match (r) {
+        case IntResult.Ok(value): return "Success: {value}"
+        case IntResult.Err(msg): return "Error: {msg}"
     }
+    return "unreachable"
 }
 
-// --- Match with guards ---
+// --- Literal cases, then conditions ---
 
 func classify(int32 n) -> str {
-    return match (n) {
-        case 0 { "zero" }
-        case x if (x > 0 && x < 10) { "small positive" }
-        case x if (x >= 10 && x < 100) { "medium positive" }
-        case x if (x >= 100) { "large positive" }
-        case _ { "negative" }
+    match (n) {
+        case 0: return "zero"
+        case _:
+            if (n > 0 && n < 10) {
+                return "small positive"
+            } else if (n >= 10 && n < 100) {
+                return "medium positive"
+            } else if (n >= 100) {
+                return "large positive"
+            }
+            return "negative"
     }
+    return "unreachable"
 }
 
-// --- Destructuring in match ---
+// --- Inspecting a struct ---
 
 struct Point {
     float64 x
@@ -54,23 +70,28 @@ struct Point {
 }
 
 func quadrant(Point p) -> str {
-    return match (p) {
-        case Point { x: 0.0, y: 0.0 } { "origin" }
-        case Point { x, y } if (x > 0.0 && y > 0.0) { "quadrant I" }
-        case Point { x, y } if (x < 0.0 && y > 0.0) { "quadrant II" }
-        case Point { x, y } if (x < 0.0 && y < 0.0) { "quadrant III" }
-        case Point { x, y } if (x > 0.0 && y < 0.0) { "quadrant IV" }
-        case _ { "on an axis" }
+    if (p.x == 0.0 && p.y == 0.0) {
+        return "origin"
+    } else if (p.x > 0.0 && p.y > 0.0) {
+        return "quadrant I"
+    } else if (p.x < 0.0 && p.y > 0.0) {
+        return "quadrant II"
+    } else if (p.x < 0.0 && p.y < 0.0) {
+        return "quadrant III"
+    } else if (p.x > 0.0 && p.y < 0.0) {
+        return "quadrant IV"
     }
+    return "on an axis"
 }
 
-// --- Match as expression ---
+// --- Matching a bool ---
 
 func abs(int32 n) -> int32 {
-    return match (n >= 0) {
-        case true { n }
-        case false { -n }
+    match (n >= 0) {
+        case true: return n
+        case false: return 0 - n
     }
+    return 0
 }
 
 // --- Exhaustiveness checking ---
@@ -81,23 +102,45 @@ enum Color : int32 {
     Blue = 2
 }
 
-// Compiler ensures all cases are handled — no default needed
+// Compiler ensures all cases are handled — no default needed. Leaving out a
+// variant is a compile error ("match is not exhaustive").
 func to_hex(Color c) -> str {
-    return match (c) {
-        case Color.Red { "#FF0000" }
-        case Color.Green { "#00FF00" }
-        case Color.Blue { "#0000FF" }
+    match (c) {
+        case Color.Red: return "#FF0000"
+        case Color.Green: return "#00FF00"
+        case Color.Blue: return "#0000FF"
     }
+    return "unreachable"
 }
 
-// --- Multiple values in a case ---
+// --- Several patterns with one result ---
 
-func is_vowel(uint8 ch) -> bool {
-    return match (ch) {
-        case 'a', 'e', 'i', 'o', 'u' { true }
-        case 'A', 'E', 'I', 'O', 'U' { true }
-        case _ { false }
+func is_vowel(int32 ch) -> bool {
+    match (ch) {
+        case 'a': return true
+        case 'e': return true
+        case 'i': return true
+        case 'o': return true
+        case 'u': return true
+        case 'A': return true
+        case 'E': return true
+        case 'I': return true
+        case 'O': return true
+        case 'U': return true
+        case _: return false
     }
+    return false
+}
+
+// --- Matching strings ---
+
+func command(str word) -> str {
+    match (word) {
+        case "start": return "starting"
+        case "stop": return "stopping"
+        case _: return "unknown command '{word}'"
+    }
+    return "unreachable"
 }
 
 func main() -> int32 {
@@ -105,21 +148,38 @@ func main() -> int32 {
     println(shape_name(Shape.Circle))
     println(shape_name(Shape.Triangle))
 
-    // Guards
+    // Payloads
+    println(describe_result(IntResult.Ok(42)))
+    println(describe_result(IntResult.Err("disk full")))
+
+    // Literal cases and conditions
     println(classify(0))
     println(classify(5))
     println(classify(42))
-    println(classify(-7))
+    println(classify(0 - 7))
 
-    // Destructuring
+    // Struct inspection
     Point p = Point { x: 3.0, y: -2.0 }
     println("Point is in {quadrant(p)}")
 
-    // Match expression
-    println("abs(-5) = {abs(-5)}")
+    // Matching a bool
+    println("abs(-5) = {abs(0 - 5)}")
 
     // Exhaustive
     println("Red = {to_hex(Color.Red)}")
+
+    // Several patterns, one result
+    str word = "Stenopos"
+    int32 vowels = 0
+    for (i in 0..<word.len()) {
+        if (is_vowel(word.byte_at(i))) {
+            vowels += 1
+        }
+    }
+    println("{word} has {vowels} vowels")
+
+    println(command("start"))
+    println(command("jump"))
 
     return 0
 }

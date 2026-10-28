@@ -1,6 +1,5 @@
 // Mutability — const variables cannot be reassigned (this file should fail to compile)
-// Expected error: cannot assign to const variable 'x'
-// Status: compile-fail (demonstrates const enforcement)
+// Expected error: cannot assign to `x` — it is declared `const`
 
 func main() -> void {
     const int32 x = 10

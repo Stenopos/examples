@@ -1,8 +1,12 @@
 // Example: Traits
-// Status: designed
-// Demonstrates: trait definition, impl blocks, default methods, trait bounds
-
-import std.io.println
+// Demonstrates: trait definition, impl blocks, default methods, trait objects,
+// trait bounds
+//
+// A trait lists methods; `impl Trait for Type` provides them. A trait may give
+// a method a default body that implementations can override. `dyn Trait`
+// holds any value whose type implements the trait. Static trait methods
+// (`Self` constructors) and trait inheritance (`trait Drawable : Shape`) are
+// not part of the language yet.
 
 // Basic trait
 trait Shape {
@@ -54,23 +58,19 @@ trait Serializable {
     func serialize() -> str
 }
 
-trait Deserializable {
-    static func deserialize(str data) -> Self
-}
-
 impl Serializable for Circle {
     func serialize() -> str {
         return "circle:{this.radius}"
     }
 }
 
-// Trait as parameter type
-func print_area(Shape s) -> void {
+// Trait object as parameter type
+func print_area(dyn Shape s) -> void {
     println("Area: {s.area()}")
 }
 
 // Trait bound in generics
-func largest_area[T: Shape](T[] shapes) -> float64 {
+func largest_area[T: Shape](List[T] shapes) -> float64 {
     float64 max = 0.0
     for (shape in shapes) {
         float64 a = shape.area()
@@ -79,21 +79,6 @@ func largest_area[T: Shape](T[] shapes) -> float64 {
         }
     }
     return max
-}
-
-// Trait inheritance
-trait Drawable : Shape {
-    func draw() -> void
-}
-
-struct Canvas {
-    Drawable[] shapes
-
-    func render() -> void {
-        for (shape in this.shapes) {
-            shape.draw()
-        }
-    }
 }
 
 func main() -> int32 {
@@ -105,9 +90,17 @@ func main() -> int32 {
     // Overridden method
     println(r.describe())
 
-    // Trait as parameter
-    print_area(c)
-    print_area(r)
+    // Trait objects
+    dyn Shape dc = c
+    dyn Shape dr = r
+    print_area(dc)
+    print_area(dr)
+
+    // Trait bound
+    List[Rectangle] rects = list_new()
+    rects.push(r)
+    rects.push(Rectangle { width: 10.0, height: 1.5 })
+    println("Largest rectangle area: {largest_area(rects)}")
 
     // Serialization
     println(c.serialize())

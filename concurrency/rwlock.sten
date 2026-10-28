@@ -1,9 +1,9 @@
 // Example: RwLock (Reader-Writer Lock)
-// Status: designed
 // Demonstrates: rwlock[T] allowing many readers or one writer at a time
-
-import std.concurrency.{spawn, Flight, rwlock}
-import std.io.println
+//
+// `read_guard()` takes the shared read lock — many readers may hold it at
+// once. `guard()` takes the exclusive write lock. Both are released at the end
+// of their `with` block.
 
 struct Config {
     str host
@@ -11,47 +11,49 @@ struct Config {
     bool debug
 }
 
-// Many Flights can read at once; only one can write
-rwlock[Config] config = rwlock(Config {
-        host: "localhost",
-        port: 8080,
-        debug: false
-})
-
-func reader_flight(int32 id) -> void {
-    // read() acquires a shared read lock — multiple readers allowed simultaneously
-    with (Config c = config.read()) {
-        println("Reader {id}: host={c.host} port={c.port}")
+func reader(rwlock[Config] config, chan[int32] seen) -> void {
+    // read_guard() acquires a shared read lock — multiple readers allowed
+    with (r = config.read_guard()) {
+        seen.send(r.get().port)
     }
 }
 
-func writer_flight() -> void {
-    // write() acquires an exclusive write lock — blocks all readers
-    with (Config c = config.write()) {
+func writer(rwlock[Config] config, semaphore done) -> void {
+    // guard() acquires the exclusive write lock — blocks all readers
+    with (w = config.guard()) {
+        Config c = w.get()
         c.port = 9090
         c.debug = true
-        println("Writer updated config: port={c.port} debug={c.debug}")
+        w.set(c)
     }
+    done.release()
 }
 
 func main() -> void {
     println("--- RwLock demo ---")
+    rwlock[Config] config = rwlock(Config { host: "localhost", port: 8080, debug: false })
 
-    // Spawn several readers — they can all run at the same time
-    Flight[] readers = []
-    int32 i = 0
-    for (i in 0..3) {
-        readers.push(spawn reader_flight(i))
+    // Several readers can run at the same time; each sees a whole config
+    chan[int32] seen = chan()
+    for (i in 0..<3) {
+        spawn reader(config, seen)
     }
+    for (i in 0..<3) {
+        int32 port = seen.recv()
+        if (port != 8080 && port != 9090) {
+            println("torn read: {port}")
+        }
+    }
+    println("3 readers saw a consistent config")
 
-    // Spawn one writer — waits for all readers to finish
-    Flight w = spawn writer_flight()
-
-    for (r in readers) { r.join() }
-    w.join()
+    // One writer — waits until no reader holds the lock
+    semaphore done = semaphore(0)
+    spawn writer(config, done)
+    done.acquire()
 
     // Read back the updated config
-    with (Config c = config.read()) {
-        println("Final port: {c.port}")
+    with (r = config.read_guard()) {
+        Config c = r.get()
+        println("Final config: host={c.host} port={c.port} debug={c.debug}")
     }
 }

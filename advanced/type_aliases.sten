@@ -1,8 +1,8 @@
 // Example: Type Aliases
-// Status: designed
 // Demonstrates: type keyword, readable aliases, generic aliases
-
-import std.io.println
+//
+// Type aliases are part of the 1.0 language and are not implemented yet; see
+// KNOWN_ISSUES.md.
 
 // Simple type aliases for readability
 type UserId = uint64
@@ -11,7 +11,7 @@ type Name = str
 
 // Alias for complex types
 type StringMap = HashMap[str, str]
-type Callback = |int32| -> bool
+type Callback = fn(int32)->bool
 type Matrix = float64[][]
 
 // Alias with generics
@@ -27,7 +27,7 @@ func get_user_name(UserId id) -> Name {
     return "User_{id}"
 }
 
-func calculate_score(int32[] values) -> Score {
+func calculate_score(List[int32] values) -> Score {
     int32 sum = 0
     for (v in values) {
         sum += v
@@ -36,14 +36,13 @@ func calculate_score(int32[] values) -> Score {
 }
 
 // Aliases make complex signatures readable
-type EventHandler = |str, HashMap[str, str]| -> bool
-type Middleware = |Request| -> Response
+type EventHandler = fn(str, HashMap[str, str])->bool
 
 struct Router {
     HashMap[str, EventHandler] routes
 
     func on(str path, EventHandler handler) -> void {
-        this.routes.set(path, handler)
+        this.routes.insert(path, handler)
     }
 }
 

@@ -8,5 +8,6 @@ func main() -> void {
     int32 num = 42
     int32 a = process(num)
     int32 b = process(num)
-    println("i32 values can be used multiple times")
+    println("process({num}) = {a}, and again = {b}")
+    println("int32 values can be used multiple times")
 }

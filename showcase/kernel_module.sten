@@ -1,5 +1,4 @@
 // Example: Linux Kernel Module — a character device
-// Status: designed
 // Demonstrates: the std `kernel` FFI library, @repr("C") structs, @section
 //               module metadata, unsafe, raw pointers
 //

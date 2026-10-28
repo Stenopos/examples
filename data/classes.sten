@@ -1,10 +1,13 @@
-// Classes — inheritance, override, abstract, and visibility modifiers
-// Status: designed
+// Classes — inheritance, override, abstract-style base classes, and visibility
 //
-// Classes are on the roadmap (Phase 9+). This file shows the intended
-// syntax: parent classes with `:` (not `inherits`), methods with an
-// implicit receiver accessed via `this` (no explicit `self` parameter),
-// and `parent.method()` to call up the chain.
+// Classes are values with inheritance: parent classes are named with `:`,
+// methods reach the receiver through `this` (no explicit `self` parameter),
+// and `parent.method()` calls up the chain. Fields and methods are private by
+// default; `pub` exposes them.
+//
+// `abstract` classes and methods are part of the 1.0 language; until then the
+// Shape base class gives `area` a virtual default that every subclass
+// overrides.
 
 class Animal {
     pub str name
@@ -14,7 +17,7 @@ class Animal {
         println("generic animal sound")
     }
 
-    func describe() -> void {
+    pub func describe() -> void {
         println("I am {this.name}")
     }
 }
@@ -27,7 +30,7 @@ class Dog : Animal {
         println("Woof!")
     }
 
-    func fetch() -> void {
+    pub func fetch() -> void {
         println("Fetching ball...")
     }
 }
@@ -39,13 +42,15 @@ class Cat : Animal {
         println("Meow!")
     }
 
-    func purr() -> void {
+    pub func purr() -> void {
         println("Purring...")
     }
 }
 
-abstract class Shape {
-    abstract func area() -> float64
+class Shape {
+    virtual func area() -> float64 {
+        return 0.0
+    }
 }
 
 class Rectangle : Shape {
@@ -75,5 +80,25 @@ class Counter {
 }
 
 func main() -> void {
+    Dog d = Dog { name: "Rex", age: 3, breed: "collie" }
+    d.describe()
+    d.speak()
+    d.fetch()
+
+    Cat c = Cat { name: "Tom", age: 5, indoor: true }
+    c.describe()
+    c.speak()
+    c.purr()
+
+    // Polymorphism goes through `dyn`
+    Rectangle r = Rectangle { width: 3.0, height: 4.0 }
+    dyn Shape s = r
+    println("area = {s.area()}")
+
+    Counter k = Counter { count: 0, name: "clicks" }
+    k.increment()
+    k.increment()
+    println("{k.name}: {k.get_count()}")
+
     println("Classes demonstration complete")
 }

@@ -1,18 +1,30 @@
-// Arrays — C-style array declarations and indexing
-// Status: designed
+// Arrays — fixed-size array declarations and indexing
+//
+// An array type is written `T[N]`. (The C-style `int64 numbers[5]` form is
+// part of the 1.0 language.) Every index is bounds-checked.
 
 func main() -> void {
-    // Array declaration with C-style syntax
-    int64 numbers[5] = [1, 2, 3, 4, 5]
-    int64 primes[4] = [2, 3, 5, 7]
+    // Array declaration
+    int64[5] numbers = [1, 2, 3, 4, 5]
+    int64[4] primes = [2, 3, 5, 7]
 
     // Array indexing
     int64 first = numbers[0]
     int64 third = numbers[2]
     int64 last = primes[3]
+    println("first = {first}, third = {third}, last prime = {last}")
 
     // Array in expressions
     int64 sum = numbers[0] + numbers[1]
+    println("numbers[0] + numbers[1] = {sum}")
+
+    // Writing an element and iterating
+    numbers[4] = 50
+    int64 total = 0
+    for (n in numbers) {
+        total += n
+    }
+    println("total after numbers[4] = 50: {total}")
 
     println("Array demo complete")
 }

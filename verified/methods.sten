@@ -1,5 +1,4 @@
 // Struct methods — implicit `this` receiver, field mutation, arguments.
-// Status: implemented
 //
 // Methods take `this` (the receiver) by reference, so mutations persist to
 // the caller. Read-only methods and methods with arguments both work.

@@ -16,5 +16,6 @@ func compute(int32 x, int32 y) -> int32 {
 
 func main() -> void {
     int32 result = compute(3, 4)
+    println("compute(3, 4) = {result}")
     println("Functions demo complete")
 }

@@ -1,5 +1,4 @@
 // Example: Raspberry Pi Bare-Metal Kernel (aarch64)
-// Status: designed
 // Demonstrates: freestanding/no-std, MMIO via raw pointers, unsafe, @no_return,
 //               @section for the boot entry, volatile device registers
 //

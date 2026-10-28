@@ -1,20 +1,32 @@
-// Strings — string methods: len, contains, starts_with, ends_with, trim, to_upper, to_lower, replace
-// Status: designed
+// Strings — string methods: len, is_empty, contains, starts_with, ends_with,
+// trim, to_upper, to_lower, replace
+//
+// `len`, `starts_with` and `trim` are built into every str; the rest come
+// from std.string. (Calling std.string functions as methods, and a built-in
+// `replace`, are part of the 1.0 language.)
+
+import std.string.{is_empty, contains, ends_with, to_upper, to_lower, split, join}
+
+// replace: split on the pattern, join with the replacement
+func replace(str s, str from, str to) -> str {
+    return join(split(s, from), to)
+}
 
 func main() -> void {
     // len
     str s1 = "Hello, Stenopos!"
     int64 length = s1.len()
+    println("Length: {length}")
 
     // is_empty
     str s2 = ""
-    if (s2.is_empty()) {
+    if (is_empty(s2)) {
         println("Empty string detected")
     }
 
     // contains
     str s3 = "Hello, Stenopos!"
-    if (s3.contains("Stenopos")) {
+    if (contains(s3, "Stenopos")) {
         println("Contains Stenopos: true")
     }
 
@@ -26,27 +38,27 @@ func main() -> void {
 
     // ends_with
     str s5 = "Hello, Stenopos!"
-    if (s5.ends_with("!")) {
+    if (ends_with(s5, "!")) {
         println("Ends with !: true")
     }
 
     // trim
     str s6 = "  Hello  "
     str trimmed = s6.trim()
-    println(trimmed)
+    println("[{trimmed}]")
 
     // to_upper
     str s7 = "hello"
-    str upper = s7.to_upper()
+    str upper = to_upper(s7)
     println(upper)
 
     // to_lower
     str s8 = "HELLO"
-    str lower = s8.to_lower()
+    str lower = to_lower(s8)
     println(lower)
 
     // replace
     str s9 = "Hello, World!"
-    str replaced = s9.replace("World", "Stenopos")
+    str replaced = replace(s9, "World", "Stenopos")
     println(replaced)
 }

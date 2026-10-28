@@ -1,51 +1,54 @@
 // Example: Channels
-// Status: designed
-// Demonstrates: chan[T] typed channels, send/recv, buffered channels, producer/consumer
-
-import std.concurrency.{spawn, chan, Flight}
-import std.io.println
+// Demonstrates: chan[T] typed channels, send/recv, producer/consumer
+//
+// A channel is a thread-safe FIFO queue shared by the Hemerodromes it is
+// passed to. `send` enqueues a value; `recv` blocks (parking the green
+// thread, not the OS thread) until one arrives. Closing a channel, iterating
+// over one with `for`, and fixed-capacity channels are not available yet;
+// see KNOWN_ISSUES.md. Here the consumer knows how many values to expect.
 
 // Producer sends values down the channel
-func producer(chan[int32] ch) -> void {
-    int32 i = 0
-    for (i in 0..5) {
-        println("Sending {i}")
+func producer(chan[int32] ch, int32 count) -> void {
+    for (i in 0..<count) {
         ch.send(i)
     }
-    ch.close()
 }
 
-// Consumer reads until channel is closed
-func consumer(chan[int32] ch) -> void {
-    for (val in ch) {
+// Consumer reads the agreed number of values, then reports back
+func consumer(chan[int32] ch, int32 count, chan[int32] done) -> void {
+    int32 sum = 0
+    for (n in 0..<count) {
+        int32 val = ch.recv()
         println("Received {val}")
+        sum += val
     }
-    println("Channel closed — consumer done")
+    println("Consumer done")
+    done.send(sum)
 }
 
-func unbuffered_example() -> void {
-    println("--- Unbuffered channel ---")
-    // Unbuffered: send blocks until recv is ready
-    chan[int32] ch = chan[int32]()
-    Flight p = spawn producer(ch)
-    Flight c = spawn consumer(ch)
-    p.join()
-    c.join()
+func producer_consumer_example() -> void {
+    println("--- Producer and consumer ---")
+    chan[int32] ch = chan()
+    chan[int32] done = chan()
+    spawn producer(ch, 5)
+    spawn consumer(ch, 5, done)
+    int32 sum = done.recv()
+    println("Sum of received values: {sum}")
 }
 
-func buffered_example() -> void {
-    println("--- Buffered channel (capacity 4) ---")
-    // Buffered: up to 4 sends before blocking
-    chan[int32] ch = chan[int32](4)
+func queued_example() -> void {
+    println("--- Queued values ---")
+    // send does not wait for a receiver: values queue up in order
+    chan[int32] ch = chan()
     ch.send(10)
     ch.send(20)
     ch.send(30)
     int32 a = ch.recv()
     int32 b = ch.recv()
-    println("Got {a} and {b} from buffered channel")
+    println("Got {a} and {b}; {ch.recv()} is still queued")
 }
 
 func main() -> void {
-    unbuffered_example()
-    buffered_example()
+    producer_consumer_example()
+    queued_example()
 }

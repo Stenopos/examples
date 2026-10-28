@@ -1,33 +1,39 @@
 // Example: Structs (Advanced)
-// Status: designed
-// Demonstrates: struct definition, methods, visibility, impl blocks, nested structs
+// Demonstrates: struct definition, methods, visibility, impl blocks, nested
+// structs, generic structs
+//
+// Methods can be written inside the struct or in an `impl` block; they reach
+// the value as `this`. Constructors are ordinary functions (static methods
+// are not part of the language). `const` struct fields are not supported
+// yet.
 
-import std.io.println
+import std.math.{sqrt}
 
-// Basic struct — fields are private by default
+// Basic struct — fields are private by default. (8-bit integer types are
+// reserved for later, so the channels are int32.)
 struct Color {
-    uint8 r
-    uint8 g
-    uint8 b
-    uint8 a
+    int32 r
+    int32 g
+    int32 b
+    int32 a
 }
 
-// Struct with methods via impl block
+// Struct with methods via an impl block
 struct Vector2 {
     float64 x
     float64 y
 }
 
+// Constructors are plain functions
+func vector2(float64 x, float64 y) -> Vector2 {
+    return Vector2 { x: x, y: y }
+}
+
+func vector2_zero() -> Vector2 {
+    return Vector2 { x: 0.0, y: 0.0 }
+}
+
 impl Vector2 {
-    // Static constructor
-    static func new(float64 x, float64 y) -> Vector2 {
-        return Vector2 { x: x, y: y }
-    }
-
-    static func zero() -> Vector2 {
-        return Vector2 { x: 0.0, y: 0.0 }
-    }
-
     // Instance methods use 'this'
     func magnitude() -> float64 {
         return sqrt(this.x * this.x + this.y * this.y)
@@ -71,10 +77,10 @@ struct Person {
     Address address
 }
 
-// Struct with const fields (immutable after construction)
+// Struct with methods written inside it
 struct Dimensions {
-    const float64 width
-    const float64 height
+    float64 width
+    float64 height
 
     func area() -> float64 {
         return this.width * this.height
@@ -92,15 +98,23 @@ func main() -> int32 {
     Color red = Color { r: 255, g: 0, b: 0, a: 255 }
     println("Red: ({red.r}, {red.g}, {red.b})")
 
-    // Static constructor
-    Vector2 v1 = Vector2.new(3.0, 4.0)
-    Vector2 v2 = Vector2.new(1.0, 2.0)
+    // Constructor functions
+    Vector2 v1 = vector2(3.0, 4.0)
+    Vector2 v2 = vector2(1.0, 2.0)
+    Vector2 origin = vector2_zero()
 
     // Method calls
     println("Magnitude: {v1.magnitude()}")
     Vector2 sum = v1.add(v2)
     println("Sum: ({sum.x}, {sum.y})")
     println("Dot: {v1.dot(v2)}")
+    Vector2 unit = v1.normalize()
+    println("Normalized: ({unit.x}, {unit.y})")
+    Vector2 big = v2.scale(10.0)
+    println("Scaled: ({big.x}, {big.y}); origin: ({origin.x}, {origin.y})")
+
+    Config cfg = Config { name: "app", max_retries: 3, debug: false }
+    println("{cfg.name} retries {cfg.max_retries} times")
 
     // Nested struct
     Person alice = Person {
@@ -114,13 +128,11 @@ func main() -> int32 {
     }
     println("{alice.name} lives in {alice.address.city}")
 
-    // Const fields — cannot be modified after construction
     Dimensions box = Dimensions { width: 10.0, height: 5.0 }
     println("Area: {box.area()}")
-    // box.width = 20.0  // ERROR: cannot modify const field
 
     // Generic struct
-    KeyValue[str, int32] kv = KeyValue[str, int32] { key: "age", value: 30 }
+    KeyValue[str, int32] kv = KeyValue { key: "age", value: 30 }
     println("{kv.key}: {kv.value}")
 
     return 0

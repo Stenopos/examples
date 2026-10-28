@@ -1,5 +1,7 @@
 // Discard — explicitly discarding non-void return values
-// Status: designed
+//
+// Return values are must-use: dropping one silently is a compile error. Use
+// the value, `discard` it on purpose, or assign it to `_`.
 
 func add(int32 a, int32 b) -> int32 {
     return a + b
@@ -9,15 +11,26 @@ func multiply(int32 a, int32 b) -> int32 {
     return a * b
 }
 
+// Functions whose result is routinely ignored can opt out
+@ignore_discard
+func log_line(str msg) -> int32 {
+    println("log: {msg}")
+    return 1
+}
+
 func main() -> void {
     // Return value used in assignment (always allowed)
     int32 result = add(1, 2)
+    println("add(1, 2) = {result}")
 
     // Discard with keyword
     discard add(3, 4)
 
     // Discard with underscore syntax
     _ = multiply(5, 6)
+
+    // @ignore_discard functions may be called as statements
+    log_line("results may be dropped")
 
     // Void functions need no discard
     println("Discard demo complete")

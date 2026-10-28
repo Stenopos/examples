@@ -1,8 +1,11 @@
 // Example: Machine Learning Pipeline
-// Status: designed
-// Demonstrates: Flights, channels, generics, traits, effects, FFI (BLAS), unsafe
+// Demonstrates: Hemerodromes, channels, generics, traits, effects, FFI (BLAS), unsafe
+//
+// This shows the intended shape of the 1.0 language and does not compile yet:
+// it needs FFI with pointer and float arguments, pointer arithmetic, `spawn`
+// of a block, channels of structs and the `if (c) a else b` expression; see
+// KNOWN_ISSUES.md.
 
-import std.io.{println, read_file}
 import std.math.{sqrt, exp, log}
 
 // --- Data types ---
@@ -115,7 +118,7 @@ impl Model for LogisticRegression {
     }
 }
 
-// --- Parallel data loading with Flights ---
+// --- Parallel data loading with Hemerodromes ---
 
 @io
 func load_dataset(str path) -> Dataset {
@@ -133,7 +136,7 @@ func load_dataset(str path) -> Dataset {
 
 @io
 func main() -> int32 {
-    // Load train and test data in parallel using Flights
+    // Load train and test data in parallel using Hemerodromes
     chan[Dataset] train_ch = chan()
     chan[Dataset] test_ch = chan()
 

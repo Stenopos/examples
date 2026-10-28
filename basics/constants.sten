@@ -11,10 +11,15 @@ func main() -> void {
     // Using constants in expressions
     float64 radius = 5.0
     float64 circumference = 2.0 * PI * radius
+    println("circumference = {circumference}")
 
     // Constants alongside mutable variables
     int64 count = 0
     count = count + MAX_SIZE
+    println("count = {count}")
 
+    if (ENABLED) {
+        println("{GREETING}, version {VERSION}")
+    }
     println("Constants demo complete")
 }
