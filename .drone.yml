@@ -1,6 +1,6 @@
 kind: pipeline
 type: docker
-name: checks
+name: programs
 
 trigger:
   event:
@@ -14,8 +14,38 @@ image_pull_secrets:
 steps:
   - name: checks
     image: gitea.tuxsmash.com/stenopos/ci:latest
+    environment:
+      GITHUB_TOKEN:
+        from_secret: github_token
     commands:
       - stenopos-checks
+      # The seed the compiler is built from: the newest published release's.
+      - stenopos-fetch-asset Stenopos/Syntagma newest stenopos-bootstrap-seed-x86_64 .seed
+
+  - name: compile
+    # Build `stenopos` at the Syntagma commit pinned in syntagma.lock (from the
+    # seed, so the programs compile with exactly that compiler), with the std
+    # that commit pins, then run every program through scripts/check.sh.
+    image: rust:1.80
+    commands:
+      - |
+        set -eu
+        pin="$(awk '$1=="commit"{print $2}' syntagma.lock)"
+        git clone -q https://gitea.tuxsmash.com/Stenopos/Syntagma.git ../Syntagma
+        git -C ../Syntagma checkout -q "$pin"
+        bash ../Syntagma/scripts/ci-llvm.sh
+        seed="$PWD/.seed"
+        if [ -f ../Syntagma/ci/seed/stenopos-bootstrap-seed-x86_64 ]; then seed="$PWD/../Syntagma/ci/seed/stenopos-bootstrap-seed-x86_64"; fi
+        chmod +x "$seed"
+        git clone -q https://gitea.tuxsmash.com/Stenopos/std.git ../std
+        git -C ../std checkout -q "$(awk '$1=="commit"{print $2}' ../Syntagma/std.lock)"
+        bash ../Syntagma/scripts/build-compiler.sh "$seed" ../stenopos
+        export STENOPOS="$PWD/../stenopos" STENOPOS_STD="$PWD/../std" STENOPOS_RUNTIME="$PWD/../Syntagma/runtime/stenopos_runtime.c"
+        sh scripts/check.sh
+    depends_on:
+      - checks
+    extra_hosts:
+      - gitea.tuxsmash.com:192.168.60.2
 
   - name: publish
     image: gitea.tuxsmash.com/stenopos/ci:latest
@@ -25,7 +55,7 @@ steps:
     commands:
       - stenopos-publish Stenopos/examples
     depends_on:
-      - checks
+      - compile
     when:
       event:
         - push
