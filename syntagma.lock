@@ -1,3 +1,3 @@
 # The Syntagma commit whose compiler (and std.lock) CI builds and checks
 # this repository with (Infra's `programs` pipeline).
-commit 61521dadd1aa2395ad7bd3612ae7ba75aba165d2
+commit fa98f14c182db23e58b373fb0150ed37d343a87f

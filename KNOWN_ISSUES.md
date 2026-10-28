@@ -35,11 +35,12 @@ Each of these is kept in its intended 1.0 form.
 
 ## Quarantined: compiler bugs
 
-`advanced/generics.sten` and `advanced/nullable.sten` are written correctly
-for the documented language and have `.expected` files; they fail only because
-of bugs 1 to 3 below.
+None. The compiler bugs below, found while porting, are all fixed in the
+Syntagma commit `syntagma.lock` pins (each notes where).
 
 ### 1. Methods on a generic struct do not exist
+
+*Fixed in Syntagma 8587c7f.*
 
 ```stenopos
 struct Box[T] {
@@ -63,6 +64,8 @@ the mangled name). Blocks `advanced/generics.sten` (`Stack[T]`).
 
 ### 2. A generic function returning `Pair[B, A]` emits invalid IR
 
+*Fixed in Syntagma 6ae527d.*
+
 ```stenopos
 struct Pair[A, B] {
     A first
@@ -85,6 +88,8 @@ func main() -> int32 {
 `advanced/generics.sten`.
 
 ### 3. `?.` through nullable struct fields
+
+*Fixed in Syntagma 8587c7f, fa98f14.*
 
 ```stenopos
 struct Employee {
@@ -133,6 +138,8 @@ nullable instead of flattening it. Blocks `advanced/nullable.sten`.
 
 ### 4. Assigning a captured variable inside a lambda is silently lost
 
+*Fixed in Syntagma 1325824: an error now.*
+
 ```stenopos
 func main() -> int32 {
     int32 count = 0
@@ -152,6 +159,8 @@ the example now demonstrates by-copy capture instead.
 
 ### 5. `List[str].join(sep)` ignores its argument
 
+*Fixed in Syntagma 1325824: an error now.*
+
 ```stenopos
 func main() -> int32 {
     List[str] b = list_new()
@@ -168,6 +177,8 @@ accepted and dropped instead of being an error. The examples use
 
 ### 6. Interpolating a `List` emits invalid IR
 
+*Fixed in Syntagma 1325824: an error now.*
+
 ```stenopos
 func main() -> int32 {
     List[int32] xs = [1, 2, 3]
@@ -181,6 +192,8 @@ func main() -> int32 {
 
 ### 7. Parallel builds race on fixed temporary files
 
+*Fixed in Syntagma f9baa7b.*
+
 Module resolution writes and runs `/tmp/stenresolve.<n>.sh` and reads
 `/tmp/stenresolve.<n>.txt`, where `<n>` is a counter, not a unique name. Two
 `stenopos build` processes at once overwrite each other's files, and imports
@@ -189,6 +202,8 @@ machine: another user can plant the script. `scripts/check.sh` therefore
 builds one example at a time.
 
 ### 8. Diagnostics lose the file name once std is imported
+
+*Fixed in Syntagma 6ae527d.*
 
 ```stenopos
 import std.string.{trim}
@@ -203,6 +218,8 @@ The error points at `--> line 285` (a line in the merged source) instead of
 `file.sten:4:11`.
 
 ### 9. Smaller diagnostic problems
+
+*Fixed in Syntagma 6ae527d.*
 
 - A `return true` in a function declared `-> int32` reports only `return type
   mismatch`, with no error code and no location (`errors/type_mismatch.sten`).

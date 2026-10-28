@@ -16,8 +16,6 @@ skip  advanced/ffi.sten               extern with pointer/str/struct/callback ty
 skip  advanced/unsafe.sten            pointer arithmetic, ptr[void], unsafe_cast, std.mem are 1.0
 skip  advanced/type_aliases.sten      type aliases are 1.0
 skip  advanced/modules.sten           single-name/whole-module/aliased imports, re-exports, protected are 1.0
-skip  advanced/generics.sten          compiler bugs: methods on a generic struct; generic swap of Pair[A, B]
-skip  advanced/nullable.sten          compiler bug: chained ?. through nullable struct fields
 skip  showcase/kernel_module.sten     a Linux kernel module: needs a kernel build and std.kernel (designed)
 skip  showcase/bare_metal.sten        Raspberry Pi bare-metal kernel: needs a freestanding aarch64 target
 skip  showcase/ml_pipeline.sten       FFI with pointers (BLAS), spawn of a block, chan of structs are 1.0
