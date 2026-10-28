@@ -1,0 +1,3 @@
+int32 = 42, float64 = 3.14, bool = true
+int64 = 5000000000, uint32 = 10, uint64 = 4294901760, str = Stenopos
+Types demo complete

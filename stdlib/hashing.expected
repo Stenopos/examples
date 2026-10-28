@@ -1,0 +1,4 @@
+fnv1a_32('foobar') = 3214735720
+crc32('123456789') = 3421780262
+djb2('hello')      = 210714636441
+deterministic      = true

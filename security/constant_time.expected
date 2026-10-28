@@ -1,0 +1,4 @@
+Password match: true
+Wrong password: false
+ct_select(secret 1, 7, 9) = 7
+Declassified: 42

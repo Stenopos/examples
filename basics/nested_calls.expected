@@ -1,0 +1,3 @@
+quadruple(5) = 20
+double(double(double(5))) = 40
+nested function calls complete

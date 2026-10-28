@@ -1,0 +1,8 @@
+Port: 8080
+Config load attempt finished
+Config problem: IoError: cannot read /tmp/stenopos-example-missing.conf
+Config load attempt finished
+Config problem: ParseError: not a number: 'eighty'
+Config load attempt finished
+Caught, logging, then rethrowing...
+Outer caught: ParseError: not a number: 'not-a-number'

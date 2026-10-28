@@ -1,0 +1,8 @@
+Doubled: 10
+Squares: [1, 4, 9, 16, 25]
+Evens: [2, 4]
+Sum: 15
+Sum of squares > 5: 50
+Built-in: 120
+10 + 5 = 15
+offset(1) = 101 (base is now 0)

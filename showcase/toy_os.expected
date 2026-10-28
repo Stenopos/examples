@@ -1,0 +1,11 @@
+kernel: scheduling 3 tasks
+  [init] tick, step 0
+  [shell] tick, step 0
+  [logger] tick, step 0
+  [logger] exit
+  [init] tick, step 1
+  [init] exit
+  [shell] tick, step 1
+  [shell] tick, step 2
+  [shell] exit
+all tasks finished after 4 scheduler rounds

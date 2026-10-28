@@ -1,0 +1,3 @@
+Taint tracking prevents injection at compile time
+executing: SELECT * FROM users WHERE name = ''' DROP TABLE users --'
+Query is tainted — cannot be passed to a @sink directly (51 bytes)

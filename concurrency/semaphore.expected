@@ -1,0 +1,5 @@
+--- Semaphore demo: max 3 concurrent DB connections ---
+All queries complete; never more than 3 at once: true
+first try_acquire: true
+second try_acquire: false
+after release: true

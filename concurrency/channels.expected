@@ -1,0 +1,10 @@
+--- Producer and consumer ---
+Received 0
+Received 1
+Received 2
+Received 3
+Received 4
+Consumer done
+Sum of received values: 10
+--- Queued values ---
+Got 10 and 20; 30 is still queued

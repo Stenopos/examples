@@ -1,0 +1,10 @@
+BFS order: 0 1 2 3 4 5
+Distances from 0:
+  node 0: 0
+  node 1: 1
+  node 2: 1
+  node 3: 2
+  node 4: 2
+  node 5: 3
+  node 6: -1
+visited 6 of 6 nodes

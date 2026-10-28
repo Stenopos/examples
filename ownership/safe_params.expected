@@ -1,0 +1,2 @@
+add(x, y) = 30, add(x, y) = 30, x and y are still 10 and 20
+int32 params are copyable

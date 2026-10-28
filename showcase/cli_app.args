@@ -1,0 +1,1 @@
+--format json -v cli_app.txt

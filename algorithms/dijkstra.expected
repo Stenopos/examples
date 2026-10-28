@@ -1,0 +1,9 @@
+Shortest distances from node 0:
+  node 0: 0
+  node 1: 1500000000
+  node 2: 1600000000
+  node 3: 3300000000
+  node 4: 3500000000
+  node 5: unreachable
+dist[3] exceeds int32::MAX: true
+dist[4] exceeds int32::MAX: true

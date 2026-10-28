@@ -1,0 +1,7 @@
+--- Basic atomic operations ---
+Stored and loaded: 42
+fetch_add(10): old=42, new=52
+compare_exchange(52, 100): swapped=true, val=100
+compare_exchange(52, 7): swapped=false, val=100
+--- Concurrent counter ---
+Final counter: 1000 (expected 1000)

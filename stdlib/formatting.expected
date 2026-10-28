@@ -1,0 +1,6 @@
+to_hex(255)          = ff
+to_binary(5)         = 101
+zero_pad(7, 4)       = 0007
+pad_left('hi', 5)    = '   hi'
+repeat_str('=', 10)  = ==========
+with_thousands       = 12,345,678

@@ -1,0 +1,6 @@
+Read 3 lines from cli_app.txt
+[
+  "alpha",
+  "beta",
+  "gamma"
+]

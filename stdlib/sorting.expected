@@ -1,0 +1,5 @@
+original first = 5
+sorted: 1 2 5 7 9
+is_sorted = true
+index of 7 = 3
+index of 4 = -1

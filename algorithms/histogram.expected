@@ -1,0 +1,17 @@
+bucket 0: 10
+bucket 1: 1
+bucket 2: 2
+bucket 3: 1
+bucket 4: 1
+bucket 5: 1
+bucket 6: 1
+bucket 7: 1
+bucket 8: 1
+bucket 9: 1
+total 20
+distinct_buckets 10
+group 0 size 5
+group 1 size 5
+group 2 size 5
+group 3 size 5
+group_count 4
