@@ -1,0 +1,24 @@
+# Examples that scripts/check.sh does not run, one per line:
+#
+#   <mode> <path> <reason>
+#
+# mode `skip`  — not compiled at all (needs a 1.0 feature, or hits a
+#                compiler bug; details in KNOWN_ISSUES.md)
+# mode `build` — compiled but not run (needs hardware, the network or never
+#                exits)
+#
+# Remove a line as soon as its example works.
+skip  basics/factorial.sten           const func (compile-time evaluation) is 1.0
+skip  data/tuples.sten                tuples are 1.0
+skip  error_handling/with_block.sten  with (File f = open(...)) is 1.0
+skip  errors/use_after_move.sten      moves (ADR-0040) are 1.0; it compiles today
+skip  advanced/ffi.sten               extern with pointer/str/struct/callback types is 1.0
+skip  advanced/unsafe.sten            pointer arithmetic, ptr[void], unsafe_cast, std.mem are 1.0
+skip  advanced/type_aliases.sten      type aliases are 1.0
+skip  advanced/modules.sten           single-name/whole-module/aliased imports, re-exports, protected are 1.0
+skip  advanced/generics.sten          compiler bugs: methods on a generic struct; generic swap of Pair[A, B]
+skip  advanced/nullable.sten          compiler bug: chained ?. through nullable struct fields
+skip  showcase/kernel_module.sten     a Linux kernel module: needs a kernel build and std.kernel (designed)
+skip  showcase/bare_metal.sten        Raspberry Pi bare-metal kernel: needs a freestanding aarch64 target
+skip  showcase/ml_pipeline.sten       FFI with pointers (BLAS), spawn of a block, chan of structs are 1.0
+build showcase/web_server.sten        an HTTP server that listens on port 8080 until stopped
