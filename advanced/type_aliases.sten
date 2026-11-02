@@ -1,8 +1,10 @@
 // Example: Type Aliases
-// Demonstrates: type keyword, readable aliases, generic aliases
+// Demonstrates: type keyword, readable aliases, generic aliases, function-type
+// aliases
 //
-// Type aliases are part of the 1.0 language and are not implemented yet; see
-// KNOWN_ISSUES.md.
+// An alias is a second name for a type, and is transparent: a `UserId` is a
+// `uint64`, so the two mix freely. (When two quantities must NOT mix, use a
+// one-field struct instead.)
 
 // Simple type aliases for readability
 type UserId = uint64
@@ -11,15 +13,11 @@ type Name = str
 
 // Alias for complex types
 type StringMap = HashMap[str, str]
-type Callback = fn(int32)->bool
-type Matrix = float64[][]
+type Callback = fn(int32) -> bool
+type Scores = List[Score]
 
 // Alias with generics
-type Result[T] = enum : int32 {
-    Ok(T) = 0
-    Err(str) = 1
-}
-
+type Index[V] = HashMap[str, V]
 type Optional[T] = T?
 
 // Using aliases in function signatures
@@ -35,15 +33,21 @@ func calculate_score(List[int32] values) -> Score {
     return cast[float64](sum) / cast[float64](values.len())
 }
 
-// Aliases make complex signatures readable
-type EventHandler = fn(str, HashMap[str, str])->bool
-
-struct Router {
-    HashMap[str, EventHandler] routes
-
-    func on(str path, EventHandler handler) -> void {
-        this.routes.insert(path, handler)
+func count_matching(List[int32] values, Callback keep) -> int32 {
+    int32 n = 0
+    for (v in values) {
+        if (keep(v)) {
+            n += 1
+        }
     }
+    return n
+}
+
+func lookup(Index[UserId] ids, Name name) -> Optional[UserId] {
+    if (ids.contains(name)) {
+        return ids.get(name)
+    }
+    return null
 }
 
 func main() -> int32 {
@@ -58,5 +62,17 @@ func main() -> int32 {
     uint64 raw_id = id  // No cast needed — same type
     println("Raw ID: {raw_id}")
 
+    Callback is_even = |int32 v| -> bool {
+        return v % 2 == 0
+    }
+    println("Even: {count_matching([1, 2, 3, 4, 6], is_even)}")
+
+    Index[UserId] ids = map_new()
+    ids.insert("ada", 7)
+    println("ada: {lookup(ids, "ada") ?? 0}, bob: {lookup(ids, "bob") ?? 0}")
+
+    StringMap env = map_new()
+    env.insert("HOME", "/home/ada")
+    println("HOME={env.get("HOME")}")
     return 0
 }

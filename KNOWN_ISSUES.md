@@ -21,7 +21,6 @@ Each of these is kept in its intended 1.0 form.
 | `errors/use_after_move.sten` | moves (ADR-0040): `str b = a` makes `a` unusable | compiles, because every transfer still copies |
 | `advanced/ffi.sten` | `extern "C"` functions with pointer, `str`, struct and callback types (only all-`int32` or all-`int64` signatures work) | `undefined variable 'ptr'` |
 | `advanced/unsafe.sten` | heap allocation through raw pointers (`std.mem`), pointer arithmetic, `ptr[void]`, `unsafe_cast` | `cannot find module 'std.mem'` |
-| `advanced/type_aliases.sten` | `type Name = T`, generic aliases | `undefined variable 'type'` |
 | `advanced/modules.sten` | `import a.b.name`, `import a.b`, `import ... as`, `pub import`, `protected` | `cannot find module 'project.utils.helpers'` |
 | `showcase/ml_pipeline.sten` | FFI with pointer and `float64` arguments (BLAS), pointer arithmetic, `spawn { ... }`, `chan[Struct]`, `if (c) a else b` | `expected ',' or a newline after a struct field` |
 
