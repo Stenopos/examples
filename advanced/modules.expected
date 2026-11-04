@@ -1,0 +1,8 @@
+Config: myapp, valid: true
+myapp (retries: 3)
+sqrt(16) = 4
+max connections: 1024
+log: ready!
+2 words
+1 + ... + 4 = 10
+Version: 1.0.0
