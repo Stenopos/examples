@@ -1,6 +1,7 @@
 next = 31
-still = 30
+now = 31
 Alice
 Alice
+a.age = 31, twin.age = 1
 Bob
 b.age = 25

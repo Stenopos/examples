@@ -1,0 +1,34 @@
+// Structs and function calls. A parameter BORROWS the caller's struct: a
+// function that changes a field changes the caller's value, like a method
+// changing `this`. Returning a struct hands back a value the caller owns,
+// and assigning one to a variable makes an independent copy.
+struct Person {
+    str name
+    int32 age
+}
+func birthday(Person p) -> int32 {
+    p.age = p.age + 1      // changes the caller's person
+    return p.age
+}
+func describe(Person p) -> str {
+    return p.name          // returns a copy of the field
+}
+func make_person(str who, int32 age) -> Person {
+    Person p = Person { name: who, age: age }
+    return p               // moved out to the caller
+}
+func main() -> void {
+    Person a = Person { name: "Alice", age: 30 }
+    println("next = {birthday(a)}")
+    println("now = {a.age}")          // 31: the parameter borrowed `a`
+    println(describe(a))
+    println(a.name)                    // still valid after the call
+
+    Person twin = a                    // assignment copies
+    twin.age = 1
+    println("a.age = {a.age}, twin.age = {twin.age}")
+
+    Person b = make_person("Bob", 25)
+    println(b.name)
+    println("b.age = {b.age}")
+}
