@@ -10,6 +10,8 @@
 #     arguments in <name>.args (if any); its stdout must equal <name>.expected
 #     and its exit code <name>.exitcode (default 0).
 # Files listed in scripts/quarantine.txt are skipped or only built.
+# With VALGRIND=1, each program that passes is run again under valgrind and
+# must not leak or touch memory it doesn't own (CI runs it this way).
 # Builds run one at a time. Exits non-zero on any failure.
 set -u
 
@@ -98,10 +100,23 @@ check_run() {
     elif [ "$code" != "$want_code" ]; then
         report_fail "$rel" "exit code $code, expected $want_code"
         head -5 "$TMP/stderr" | sed 's/^/        /'
+    elif [ "${VALGRIND:-}" = 1 ] && ! memcheck "$rel" "$args"; then
+        report_fail "$rel" "valgrind found a leak or a memory error:"
+        grep -E "definitely lost|indirectly lost|Invalid (read|write|free)|ERROR SUMMARY" "$TMP/vg" | head -6 | sed 's/^/        /'
     else
         echo "ok    $rel"
         pass=$((pass + 1))
     fi
+}
+
+# memcheck REL ARGS: run the built program under valgrind (0 when clean).
+memcheck() {
+    # shellcheck disable=SC2086 # ARGS is split into words on purpose
+    (cd "$(dirname "$1")" && ulimit -s unlimited 2>/dev/null
+     timeout 600 valgrind --leak-check=full --error-exitcode=99 "$TMP/bin" $2) \
+        <"/dev/null" >/dev/null 2>"$TMP/vg"
+    rc=$?
+    [ "$rc" -ne 99 ] && [ "$rc" -ne 124 ]
 }
 
 cd "$ROOT" || exit 2

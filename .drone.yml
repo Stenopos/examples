@@ -25,7 +25,8 @@ steps:
   - name: compile
     # Build `stenopos` at the Syntagma commit pinned in syntagma.lock (from the
     # seed, so the programs compile with exactly that compiler), with the std
-    # that commit pins, then run every program through scripts/check.sh.
+    # that commit pins, then run every program through scripts/check.sh,
+    # under valgrind.
     image: rust:1.80
     commands:
       - |
@@ -34,6 +35,7 @@ steps:
         git clone -q https://gitea.tuxsmash.com/Stenopos/Syntagma.git ../Syntagma
         git -C ../Syntagma checkout -q "$pin"
         bash ../Syntagma/scripts/ci-llvm.sh
+        apt-get install -y -qq valgrind
         seed="$PWD/.seed"
         if [ -f ../Syntagma/ci/seed/stenopos-bootstrap-seed-x86_64 ]; then seed="$PWD/../Syntagma/ci/seed/stenopos-bootstrap-seed-x86_64"; fi
         chmod +x "$seed"
@@ -41,7 +43,9 @@ steps:
         git -C ../std checkout -q "$(awk '$1=="commit"{print $2}' ../Syntagma/std.lock)"
         bash ../Syntagma/scripts/build-compiler.sh "$seed" ../stenopos
         export STENOPOS="$PWD/../stenopos" STENOPOS_STD="$PWD/../std" STENOPOS_RUNTIME="$PWD/../Syntagma/runtime/stenopos_runtime.c"
-        sh scripts/check.sh
+        # VALGRIND=1: every program that should pass must also be leak-free
+        # and touch only memory it owns.
+        VALGRIND=1 sh scripts/check.sh
     depends_on:
       - checks
     extra_hosts:
