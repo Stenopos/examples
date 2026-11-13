@@ -147,7 +147,7 @@ func banner() -> void {
 
 // Read one CR/LF-terminated line into a fixed buffer, echoing as we go.
 // Returns the number of bytes read.
-func read_line(ptr[uint8] buffer, int32 max) -> int32 {
+func uart_read_line(ptr[uint8] buffer, int32 max) -> int32 {
     int32 len = 0
     while (len < max - 1) {
         uint8 ch = uart_get()
@@ -199,7 +199,7 @@ func shell() -> void {
     repeat {
         uart_write("stenopos> ")
         ptr[uint8] buffer = &line_storage[0]
-        int32 n = read_line(buffer, 64)
+        int32 n = uart_read_line(buffer, 64)
         if (n == 0) {
             continue
         }
