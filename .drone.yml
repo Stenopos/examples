@@ -19,8 +19,10 @@ steps:
         from_secret: github_token
     commands:
       - stenopos-checks
-      # The seed the compiler is built from: the newest published release's.
-      - stenopos-fetch-asset Stenopos/Syntagma newest stenopos-bootstrap-seed-x86_64 .seed
+      # The seed the compiler is built from: the release the pinned commit is in.
+      - stenopos-fetch-seed syntagma.lock .seed
+    extra_hosts:
+      - gitea.tuxsmash.com:192.168.60.2
 
   - name: compile
     # Build `stenopos` at the Syntagma commit pinned in syntagma.lock (from the
