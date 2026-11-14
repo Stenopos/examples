@@ -1,49 +1,66 @@
 // Example: HTTP Web Server
-// Demonstrates: std.net TCP sockets, std.http request/response, capabilities.
+// Demonstrates: std.http, a Hemerodrome per connection, capabilities, and a
+// clean stop on SIGTERM.
 //
-// A real HTTP server in Stenopos, in ~30 lines. Build and run it, then in another
-// terminal:  curl localhost:8080/   |   curl localhost:8080/health
+// Build and run it, then in another terminal:
+//   curl localhost:8080/   |   curl localhost:8080/health
+//   curl -d '{"n": 1}' -H 'Content-Type: application/json' localhost:8080/echo
 //
 // The network is a capability: every function that touches a socket declares
-// @cap(Network), so `main`'s use of the network is visible in its type — the
+// @cap(Network), so `main`'s use of the network is visible in its type: the
 // compiler will not let a function open a socket without saying so.
 
-import std.net.{Listener, Conn, listen, accept, recv, send, close, shutdown}
-import std.http.{Request, parse_request, response}
+import std.net.{Listener, Conn, listen, accept, close}
+import std.http.{Request, Response, HttpConn, serve, limits, text, json}
+import std.os.{notify_signals, exit, SIGTERM, SIGINT}
 
-// Route a request path to a response. Pure string work (no @cap needed): it
-// only builds responses, it does not touch the network itself.
-func route(str path) -> str {
-    if (path == "/") {
-        return response(200, "Welcome to Stenopos!")
+// Route a request to a response. Pure string work (no @cap needed).
+func route(Request r) -> Response {
+    if (r.path == "/") {
+        return text(200, "Welcome to Stenopos!\n")
     }
-    if (path == "/health") {
-        return response(200, "OK")
+    if (r.path == "/health") {
+        return text(200, "OK\n")
     }
-    return response(404, "Not Found")
+    if (r.path == "/echo" && r.method == "POST") {
+        return json(200, r.body)
+    }
+    return text(404, "Not Found\n")
+}
+
+// One connection: requests until the client is done (keep-alive included).
+// serve() answers malformed, oversized or slow requests itself.
+@cap(Network)
+func handle(Conn c) -> void {
+    HttpConn h = serve(c, limits())
+    bool open = true
+    while (open) {
+        Request? r = h.next()
+        if (r == null) {
+            open = false
+        } else {
+            h.respond(route(r!!))
+        }
+    }
+    discard close(c)
 }
 
 @cap(Network)
-func main() -> void {
-    Listener l = listen(8080)
-    if (l.fd < 0) {
-        println("bind failed — is port 8080 already in use?")
-        return
+func accept_loop(Listener l) -> void {
+    while (true) {
+        spawn handle(accept(l))
     }
-    println("Stenopos web server listening on http://localhost:8080")
+}
 
-    // Accept and serve one connection at a time (Ctrl-C to stop). Each: read the
-    // request, route on its path, write the response, close the connection.
-    for (n in 0..1000000) {
-        Conn c = accept(l)
-        if (c.fd < 0) {
-            continue
-        }
-        str raw = recv(c)
-        Request req = parse_request(raw)
-        str resp = route(req.path)
-        discard send(c, resp)
-        discard close(c)
-    }
-    discard shutdown(l)
+@cap(Network)
+@cap(Process)
+func main() -> void {
+    chan[int32] stop = chan()
+    notify_signals([SIGTERM, SIGINT], stop)
+    Listener l = listen(8080)            // throws if the port is taken
+    println("Stenopos web server listening on http://localhost:8080")
+    spawn accept_loop(l)
+    discard stop.recv()                  // Ctrl-C, or Kubernetes stopping the pod
+    println("stopping")
+    exit(0)                              // the accept loop never ends by itself
 }

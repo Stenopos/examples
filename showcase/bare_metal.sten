@@ -159,7 +159,7 @@ func uart_read_line(ptr[uint8] buffer, int32 max) -> int32 {
         // Backspace / delete.
         if ((ch == 0x08 || ch == 0x7F) && len > 0) {
             len -= 1
-            uart_write("\b \b")
+            uart_write("\x08 \x08")
             continue
         }
         uart_put(ch)          // echo
