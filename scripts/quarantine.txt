@@ -12,9 +12,8 @@ skip  basics/factorial.sten           const func (compile-time evaluation) is 1.
 skip  data/tuples.sten                tuples are 1.0
 skip  error_handling/with_block.sten  with (File f = open(...)) is 1.0
 skip  errors/use_after_move.sten      moves (ADR-0040) are 1.0; it compiles today
-skip  advanced/ffi.sten               extern with pointer/str/struct/callback types is 1.0
-skip  advanced/unsafe.sten            pointer arithmetic, ptr[void], unsafe_cast, std.mem are 1.0
-skip  showcase/kernel_module.sten     a Linux kernel module: needs a kernel build and std.kernel (designed)
+skip  advanced/unsafe.sten            pointer arithmetic, unsafe_cast and std.mem are 1.0 (typed pointers, ptr[void], casts are in rc.8)
+skip  showcase/kernel_module.sten     a Linux kernel module: needs a kernel build and @section on a const (M9); std.kernel compiles from rc.8
 skip  showcase/bare_metal.sten        Raspberry Pi bare-metal kernel: needs a freestanding aarch64 target
-skip  showcase/ml_pipeline.sten       FFI with pointers (BLAS), spawn of a block, chan of structs are 1.0
+skip  showcase/ml_pipeline.sten       spawn of a block, chan of structs, the if-expression, and a BLAS library to link (its FFI works from rc.8)
 build showcase/web_server.sten        an HTTP server that listens on port 8080 until stopped

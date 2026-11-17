@@ -19,15 +19,14 @@ Each of these is kept in its intended 1.0 form.
 | `data/tuples.sten` | tuple types, tuple returns and destructuring | `expected a statement, found ','` |
 | `error_handling/with_block.sten` | `with (File f = open(path)) { ... }` | `undefined variable 'f'` |
 | `errors/use_after_move.sten` | moves (ADR-0040): `str b = a` makes `a` unusable | compiles, because every transfer still copies |
-| `advanced/ffi.sten` | `extern "C"` functions with pointer, `str`, struct and callback types (only all-`int32` or all-`int64` signatures work) | `undefined variable 'ptr'` |
-| `advanced/unsafe.sten` | heap allocation through raw pointers (`std.mem`), pointer arithmetic, `ptr[void]`, `unsafe_cast` | `cannot find module 'std.mem'` |
-| `showcase/ml_pipeline.sten` | FFI with pointer and `float64` arguments (BLAS), pointer arithmetic, `spawn { ... }`, `chan[Struct]`, `if (c) a else b` | `expected ',' or a newline after a struct field` |
+| `advanced/unsafe.sten` | heap allocation through raw pointers (`std.mem`), pointer arithmetic, `unsafe_cast` (typed pointers, `ptr[void]` and pointer casts work from rc.8) | `cannot find module 'std.mem'` |
+| `showcase/ml_pipeline.sten` | `spawn { ... }`, `chan[Struct]`, `if (c) a else b`, and a BLAS library to link (its FFI, pointers and `float64` arguments, works from rc.8; it also calls `malloc` without declaring it) | `unknown function 'malloc'` |
 
 ## Quarantined: hardware, an OS, or a program that never exits
 
 | Example | Why | Checked as |
 |---------|-----|------------|
-| `showcase/kernel_module.sten` | A Linux kernel module: needs freestanding kernel-ABI code generation, Kbuild, and the `kernel` bindings in std (still "designed"; they do not compile) | skipped: `undefined variable 'str'` (in std's `kernel.printk`) |
+| `showcase/kernel_module.sten` | A Linux kernel module: needs freestanding kernel-ABI code generation, Kbuild, and `@section` on a `const` (module metadata). std's `kernel` bindings compile from rc.8 | skipped: `` `@section` cannot be applied to `const` declarations `` |
 | `showcase/bare_metal.sten` | A Raspberry Pi 3/4 kernel: needs a freestanding `aarch64-none-elf` target, constant expressions in top-level `const`, MMIO through raw pointers | skipped: `a top-level 'const' must be initialized with a literal constant` |
 | `showcase/web_server.sten` | An HTTP server on port 8080 that runs until stopped | built only |
 
