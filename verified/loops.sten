@@ -1,7 +1,7 @@
 // Inclusive/exclusive ranges, while loops, compound assignment.
 func main() -> void {
     int32 sum = 0
-    for (i in 0..5) {
+    for (i in 0..=5) {
         sum += i
     }
     println("{sum}")

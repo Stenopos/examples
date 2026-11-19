@@ -1,7 +1,7 @@
 // Loops — for loops and while loops
 
 func main() -> void {
-    for (i in 0..5) {
+    for (i in 0..=5) {
         println("iteration")
     }
 

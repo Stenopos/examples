@@ -17,6 +17,11 @@ struct Dog {
 
 struct Cat {
     int32 lives
+
+    // A method of Cat's own (no trait), written inside the struct.
+    func lives_left() -> int32 {
+        return this.lives
+    }
 }
 
 impl Describable for Dog {
@@ -32,13 +37,6 @@ impl Describable for Dog {
 impl Describable for Cat {
     func name() -> str {
         return "Cat"
-    }
-}
-
-// An inherent impl (no trait): plain methods on a type.
-impl Cat {
-    func lives_left() -> int32 {
-        return this.lives
     }
 }
 

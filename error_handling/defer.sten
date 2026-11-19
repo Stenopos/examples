@@ -21,7 +21,7 @@ func early_return_demo(bool flag) -> int32 {
 
 func per_iteration() -> void {
     // Block-scoped: the defer fires at the end of EACH iteration.
-    for (i in 0..2) {
+    for (i in 0..=2) {
         defer println("  close {i}")
         println("  open {i}")
     }

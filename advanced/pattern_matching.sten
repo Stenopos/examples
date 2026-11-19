@@ -7,7 +7,7 @@
 // variants — whose payload fields bind as names — or `_` for the catch-all.
 // `match` is a statement, so each case returns or assigns its result.
 // Conditions that need more than a literal (ranges, comparisons, fields of a
-// struct) are written with if/else; range patterns (`case 10..99:`) are part
+// struct) are written with if/else; range patterns (`case 10..100:`) are part
 // of the 1.0 language.
 
 // --- Enum matching ---

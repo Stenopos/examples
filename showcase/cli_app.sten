@@ -54,7 +54,7 @@ impl Formatter for JsonFormatter {
         str result = "[\n"
         for (i, line in lines) {
             result += "{pad}\"{line}\""
-            if (cast[int64](i) < lines.len() - 1) {
+            if (i < lines.len() - 1) {
                 result += ","
             }
             result += "\n"

@@ -1,1 +1,1 @@
-no implicit conversions
+only a narrower integer converts by itself

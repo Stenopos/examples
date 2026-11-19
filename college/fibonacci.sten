@@ -3,7 +3,7 @@
 
 func fib_iter(int32 n) -> int64 {
     if (n < 2) {
-        return cast[int64](n)
+        return n
     }
     int64 a = 0
     int64 b = 1
@@ -19,7 +19,7 @@ func fib_iter(int32 n) -> int64 {
 
 func fib_rec(int32 n) -> int64 {
     if (n < 2) {
-        return cast[int64](n)
+        return n
     }
     return fib_rec(n - 1) + fib_rec(n - 2)
 }

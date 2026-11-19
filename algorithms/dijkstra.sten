@@ -62,7 +62,7 @@ func main() -> void {
 
     List[int64] dist = list_new()
     List[bool] visited = list_new()
-    for (i in 0..node_count) {
+    for (i in 0..=node_count) {
         dist.push(infinity)
         visited.push(false)
     }
@@ -73,7 +73,7 @@ func main() -> void {
         // Find the unvisited node with the smallest tentative distance.
         int32 u = -1
         int64 best = infinity
-        for (i in 0..node_count) {
+        for (i in 0..=node_count) {
             if (!visited.get(i) && dist.get(i) <= best) {
                 best = dist.get(i)
                 u = i
@@ -103,7 +103,7 @@ func main() -> void {
     }
 
     println("Shortest distances from node {source}:")
-    for (i in 0..node_count) {
+    for (i in 0..=node_count) {
         int64 d = dist.get(i)
         if (d >= infinity) {
             println("  node {i}: unreachable")

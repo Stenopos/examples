@@ -49,7 +49,7 @@ func main() -> void {
 
     List[bool] visited = list_new()
     List[int32] dist = list_new()
-    for (i in 0..node_count) {
+    for (i in 0..=node_count) {
         visited.push(false)
         dist.push(-1)
     }
@@ -92,7 +92,7 @@ func main() -> void {
     println("BFS order: {order_parts.join()}")
 
     println("Distances from {source}:")
-    for (i in 0..node_count) {
+    for (i in 0..=node_count) {
         println("  node {i}: {dist.get(i)}")
     }
 

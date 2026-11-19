@@ -23,7 +23,7 @@ func main() -> void {
     println("  returned {r}")
 
     println("per-iteration cleanup:")
-    for (i in 0..2) {
+    for (i in 0..=2) {
         defer println("  close {i}")
         println("  open {i}")
     }

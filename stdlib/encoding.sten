@@ -16,7 +16,7 @@ func to_text(List[int32] b) -> str {
     str out = ""
     int64 i = 0
     while (i < b.len()) {
-        int64 lo = cast[int64](b.get(i))
+        int64 lo = b.get(i)
         out = out + "0123456789abcdef".substring(lo / 16, lo / 16 + 1)
         i = i + 1
     }

@@ -7,7 +7,7 @@
 func main() -> void {
     // Safe cast: int32 to int64 (widening)
     int32 x = 42
-    int64 y = cast[int64](x)
+    int64 y = x
     println("int32 {x} -> int64 {y}")
 
     // Safe cast: float64 to int32 (truncating)
@@ -35,7 +35,7 @@ func main() -> void {
 
     // Multiple casts in chain
     int32 small = 7
-    int64 medium = cast[int64](small)
+    int64 medium = small
     float64 big = cast[float64](medium)
     println("int32 {small} -> int64 {medium} -> float64 {big}")
 

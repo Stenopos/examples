@@ -19,9 +19,9 @@ func hash_of(str key) -> int32 {
         h = wrapping_add(wrapping_mul(h, 33), cast[int64](key.byte_at(i)))
         i = i + 1
     }
-    int64 slot = h % cast[int64](capacity())
+    int64 slot = h % capacity()
     if (slot < 0) {
-        slot = slot + cast[int64](capacity())
+        slot = slot + capacity()
     }
     return cast[int32](slot)
 }

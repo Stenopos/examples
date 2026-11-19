@@ -13,7 +13,7 @@ func fib_iterative(int32 n) -> int32 {
     }
     int32 a = 0
     int32 b = 1
-    for (i in 2..n) {
+    for (i in 2..=n) {
         int32 c = a + b
         a = b
         b = c
@@ -23,12 +23,12 @@ func fib_iterative(int32 n) -> int32 {
 
 func main() -> int32 {
     println("Fibonacci (recursive):")
-    for (i in 0..10) {
+    for (i in 0..=10) {
         println("  fib({i}) = {fib_recursive(i)}")
     }
 
     println("Fibonacci (iterative):")
-    for (i in 0..10) {
+    for (i in 0..=10) {
         println("  fib({i}) = {fib_iterative(i)}")
     }
 

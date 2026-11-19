@@ -1,7 +1,7 @@
 // Match — pattern matching on literal values with a catch-all
 //
 // Stenopos `match` requires either exhaustive coverage or a `case _:` arm.
-// Range patterns (`case 2..10:`) are planned; this example uses literals.
+// Range patterns (`case 2..=10:`) are planned; this example uses literals.
 
 func describe(int64 x) -> str {
     match (x) {
