@@ -32,7 +32,7 @@ func spawn_task(Kernel k, str name, int32 steps) -> Kernel {
     List[int32] st = list_new()
     List[int32] state = list_new()
     for (x in k.names) {
-        names.push(x)
+        names.push(x.clone())
     }
     for (x in k.pc) {
         pc.push(x)

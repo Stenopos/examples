@@ -15,10 +15,10 @@ func last[T](List[T] xs) -> T {
 func doubled[T](List[T] xs) -> List[T] {
     List[T] out = list_new()
     for (x in xs) {
-        out.push(x)
+        out.push(x.clone())
     }
     for (x in xs) {
-        out.push(x)
+        out.push(x.clone())
     }
     return out
 }
