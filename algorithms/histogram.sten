@@ -106,7 +106,7 @@ func main() -> int32 {
     int64 gi = 0
     int64 group_count = groups.len()
     while (gi < group_count) {
-        Group grp = groups.get(gi)
+        Group grp = groups.get(gi).clone()
         println("group {gi} size {grp.items.len()}")
         gi += 1
     }

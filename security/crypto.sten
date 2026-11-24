@@ -24,7 +24,7 @@ func load_key(str path) -> CryptoKey {
 
 func encrypt(CryptoKey key, List[int32] plaintext) -> List[int32] {
     // A placeholder cipher: XOR with the repeating key
-    @sensitive List[int32] k = key.key_bytes
+    @sensitive List[int32] k = key.key_bytes.clone()
     List[int32] out = list_new()
     for (i, b in plaintext) {
         out.push(b ^ k.get(i % key.length))

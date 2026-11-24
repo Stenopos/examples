@@ -27,7 +27,7 @@ impl Container for IntBox {
 impl Container for StrBox {
     type Item = str
     func first() -> str {
-        return this.value
+        return this.value.clone()
     }
 }
 

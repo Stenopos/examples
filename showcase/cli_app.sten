@@ -87,7 +87,7 @@ func parse_args(List[str] argv) -> Config {
         match (argv.get(i)) {
             case "-o":
                 i += 1
-                config.output_path = argv.get(i)
+                config.output_path = argv.get(i).clone()
             case "--format":
                 i += 1
                 match (argv.get(i)) {
@@ -98,7 +98,7 @@ func parse_args(List[str] argv) -> Config {
             case "-v":
                 config.verbose = true
             case _:
-                config.input_path = argv.get(i)
+                config.input_path = argv.get(i).clone()
         }
         i += 1
     }

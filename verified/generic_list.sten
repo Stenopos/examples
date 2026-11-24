@@ -4,11 +4,11 @@
 // List[int32] and List[str], and str elements are cloned/freed correctly.
 
 func first[T](List[T] xs) -> T {
-    return xs.get(0)
+    return xs.get(0).clone()
 }
 
 func last[T](List[T] xs) -> T {
-    return xs.get(xs.len() - 1)
+    return xs.get(xs.len() - 1).clone()
 }
 
 // Build a fresh list with every element of `xs` repeated twice.

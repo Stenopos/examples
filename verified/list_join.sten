@@ -11,7 +11,7 @@ func build_csv(List[str] fields) -> str {
         if (i > 0) {
             parts.push(",")
         }
-        parts.push(fields.get(i))
+        parts.push(fields.get(i).clone())
         i += 1
     }
     return parts.join()

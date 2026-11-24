@@ -8,7 +8,7 @@ func main() -> void {
     println(greet(who))
 
     str x = "shared"
-    str y = x
+    str y = x.clone()
     println(x)
     println(y)
 

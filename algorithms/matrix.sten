@@ -40,8 +40,8 @@ func main() -> void {
             int64 sum = 0
             int64 k = 0
             while (k < dim) {
-                Row64 a_row = a.get(i)
-                Row64 b_row = b.get(k)
+                Row64 a_row = a.get(i).clone()
+                Row64 b_row = b.get(k).clone()
                 int64 term = a_row.cells.get(k) * b_row.cells.get(j)
                 sum += term
                 k += 1
@@ -56,7 +56,7 @@ func main() -> void {
     println("C = A * B:")
     int64 pi = 0
     while (pi < dim) {
-        Row64 prow = c.get(pi)
+        Row64 prow = c.get(pi).clone()
         List[str] cells = list_new()
         int64 pj = 0
         while (pj < dim) {
@@ -75,7 +75,7 @@ func main() -> void {
     int64 trace = 0
     int64 d = 0
     while (d < dim) {
-        Row64 drow = c.get(d)
+        Row64 drow = c.get(d).clone()
         trace += drow.cells.get(d)
         d += 1
     }
@@ -86,10 +86,10 @@ func main() -> void {
 
     // Mutate one element in place through nested get/set and re-read it,
     // to stress struct-holding-List update (not just build-then-read).
-    Row64 first_row = c.get(0)
-    List[int64] fc = first_row.cells
+    Row64 first_row = c.get(0).clone()
+    List[int64] fc = first_row.cells.clone()
     fc.set(0, fc.get(0) + 1)
     c.set(0, Row64 { cells: fc })
-    Row64 reread = c.get(0)
+    Row64 reread = c.get(0).clone()
     println("C[0][0] after +1 = {reread.cells.get(0)}")
 }

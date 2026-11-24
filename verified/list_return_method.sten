@@ -21,7 +21,7 @@ func main() -> void {
     println("len = {nums().len()}")
     int32 second = nums().get(1)
     println("second = {second}")
-    str first = words().get(0)
+    str first = words().get(0).clone()
     println("first = {first}")
     println("words = {words().len()}")
 }

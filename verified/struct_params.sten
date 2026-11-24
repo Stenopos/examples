@@ -11,7 +11,7 @@ func birthday(Person p) -> int32 {
     return p.age
 }
 func describe(Person p) -> str {
-    return p.name          // returns a copy of the field
+    return p.name.clone()          // returns a copy of the field
 }
 func make_person(str who, int32 age) -> Person {
     Person p = Person { name: who, age: age }
@@ -24,7 +24,7 @@ func main() -> void {
     println(describe(a))
     println(a.name)                    // still valid after the call
 
-    Person twin = a                    // assignment copies
+    Person twin = a.clone()                    // assignment copies
     twin.age = 1
     println("a.age = {a.age}, twin.age = {twin.age}")
 

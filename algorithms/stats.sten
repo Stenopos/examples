@@ -78,7 +78,7 @@ func main() -> int32 {
 
     // Median: sort a COPY (value-semantics assignment deep-copies), leave
     // the original list's order untouched, then index the middle.
-    List[int64] sorted = values
+    List[int64] sorted = values.clone()
     sorted.sort()
     int64 mid = n / 2
     int64 median = sorted.get(mid)

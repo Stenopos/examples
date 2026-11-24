@@ -14,7 +14,7 @@ struct Outer {
 func main() -> void {
     // Struct copy — including a nested struct and its `str` fields.
     Outer a = Outer { inner: Inner { tag: "original" }, name: "a" }
-    Outer b = a                 // deep copy
+    Outer b = a.clone()                 // deep copy
     b.name = "b"
     b.inner.tag = "changed"
     println("a = {a.name} / {a.inner.tag}")     // a still original
@@ -23,7 +23,7 @@ func main() -> void {
     // List copy — the elements are duplicated, not aliased.
     List[str] xs = list_new()
     xs.push("x")
-    List[str] ys = xs           // deep copy
+    List[str] ys = xs.clone()           // deep copy
     ys.push("y")
     println("xs has {xs.len()}, ys has {ys.len()}")   // 1, 2
 

@@ -18,7 +18,7 @@ func main() -> int32 {
     }
     List[str] xs = list_new()
     xs.push("hello.world")
-    str s = xs.get(0)
+    str s = xs.get(0).clone()
     int32 flag = 1
     if (flag == 1) {
         if (s.len() > 5) {

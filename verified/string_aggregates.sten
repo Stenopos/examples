@@ -9,7 +9,7 @@ func main() -> void {
     println(p.name)
 
     str n = "Bob"
-    Person q = Person { name: n, age: 25 }   // field clones n, no aliasing
+    Person q = Person { name: n.clone(), age: 25 }   // field clones n, no aliasing
     println(q.name)
     q.name = "Charlie"                        // frees old field, clones literal
     println(q.name)

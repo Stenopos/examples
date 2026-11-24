@@ -67,8 +67,8 @@ func main() -> void {
         front += 1
         order.push(cur)
 
-        Row row = graph.get(cur)
-        List[int32] neighbors = row.neighbors
+        Row row = graph.get(cur).clone()
+        List[int32] neighbors = row.neighbors.clone()
         for (nb in neighbors) {
             if (!visited.get(nb)) {
                 visited.set(nb, true)

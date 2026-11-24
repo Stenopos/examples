@@ -19,7 +19,7 @@ struct Pair[A, B] {
 }
 
 func swap[A, B](Pair[A, B] p) -> Pair[B, A] {
-    return Pair { first: p.second, second: p.first }
+    return Pair { first: p.second, second: p.first.clone() }
 }
 
 // Generic with trait constraint

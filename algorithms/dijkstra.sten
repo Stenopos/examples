@@ -84,9 +84,9 @@ func main() -> void {
             processed = node_count
         } else {
             visited.set(u, true)
-            Edges e = adj.get(u)
-            List[int32] targets = e.targets
-            List[int64] weights = e.weights
+            Edges e = adj.get(u).clone()
+            List[int32] targets = e.targets.clone()
+            List[int64] weights = e.weights.clone()
             int64 n_edges = targets.len()
             int64 k = 0
             while (k < n_edges) {
