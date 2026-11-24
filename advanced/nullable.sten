@@ -84,7 +84,7 @@ struct Company {
 
 func get_lead_email(Company company) -> str? {
     // Each ?. short-circuits to null if the receiver is null
-    return company.engineering?.lead?.email
+    return company.engineering?.lead?.email.clone()
 }
 
 // Non-null assertion (use sparingly — aborts if null)
